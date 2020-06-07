@@ -1,31 +1,53 @@
 import time
-from core import db, helpers, logging
+from core import db
 
 # Initialize
 dbCollectionName = "playbook"
 
 class _playbook(db._document):
     name = str()
-    host = str()
+    occurrence = str()
     version = float()
-    result = dict()
+    resultData = dict()
+    result = bool()
+    startTime = int()
+    endTime = int()
+    attempt = int()
+    history = list()
 
     _dbCollection = db.db[dbCollectionName]
 
-    def new(self, domain, acl):
-        self.name = domain
-        self.domain = domain
-        self.createdDate = int(time.time())
-        self.acl = acl
+    def new(self, name, occurrence, version):
+        self.name = name
+        self.occurrence = occurrence
+        self.version = version
+        self.startTime = int(time.time())
         return super(_playbook, self).new()
 
-    def updateRecord(self, domain, ip="", mx=False, when="", fuzzer=""):
-        self.history.append( { "lastUpdate" : self.lastUpdateTime, "endDate" : int(time.time()), "domain" : self.domain, "ip" : self.ip, "mx" : self.mx, "when" : self.when } )
+    def endPlay(self, result=False, resultData={}):
+        self.result = result
+        self.resultData = resultData
+        self.endTime = int(time.time())
+        self.update(["result","result","endTime"])
+
+    def replay(self):
+        self.history.append( { "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt } )
         self.update(["history"])
-        self.domain = domain
-        self.ip = ip
-        self.mx = mx
-        self.when = when
-        self.fuzzer = fuzzer
-        self.update(["domain","ip","mx","when","fuzzer"])
+        self.startTime = int(time.time())
+        self.endTime = 0
+        self.resultData = {}
+        self.result = False
+        self.attempt += 1
+        self.update(["startTime","endTime","resultData","result","attempt"])
+
+    def newPlay(self, version):
+        self.history.append( { "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt } )
+        self.update(["history"])
+        self.version = version
+        self.startTime = int(time.time())
+        self.endTime = 0
+        self.resultData = {}
+        self.result = False
+        self.attempt = 0
+        self.update(["version","startTime","endTime","resultData","result","attempt"])
 
