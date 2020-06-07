@@ -1,0 +1,60 @@
+<script src="{{ url_for('static', filename='includes/jquery/js/jquery-3.4.1.js') }}"></script>
+<script src="{{ url_for('static', filename='includes/jquery/js/jquery.datatables.min.js') }}"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='includes/datatables/css/dataTables.bootstrap.css') }}">
+<script src="{{ url_for('static', filename='includes/datatables/js/dataTables.bootstrap.js') }}"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='includes/bootstrap-3.3.7/css/bootstrap.min.css') }}">
+<script src="{{ url_for('static', filename='includes/bootstrap-3.3.7/js/bootstrap.min.js') }}"></script>
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/datatable.css') }}">
+
+<html>
+    <head>
+        
+    </head>
+    <body>
+        <table id="orderTable" class="table table-striped table-bordered table-sm" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th class="th-sm">_id</th>
+                    <th class="th-sm">name</th>
+                    <th class="th-sm">version</th>
+                    <th class="th-sm">occurrence</th>
+                    <th class="th-sm">startTime</th>
+                    <th class="th-sm">endTime</th>
+                    <th class="th-sm">attempt</th>
+                    <th class="th-sm">result</th>
+                    <th class="th-sm">resultData</th>
+                    <th class="th-sm">history</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for play in plays %}
+                    <tr>
+                        <td>{{ play['_id'] }}</td>
+                        <td>{{ play['name'] }}</td>
+                        <td>{{ play['version'] }}</td>
+                        <td>{{ play['occurrence'] }}</td>
+                        <td>{{ play['startTime'] }}</td>
+                        <td>{{ play['endTime'] }}</td>
+                        <td>{{ play['attempt'] }}</td>
+                        <td>{{ play['result'] }}</td>
+                        <td>{{ play['resultData'] }}</td>
+                        <td>{{ play['history'] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </body>
+</html>
+
+<script>
+    $(document).ready(function () {
+        $('#orderTable').DataTable({
+            "paging" : false
+        });
+        $('.dataTables_length').addClass('bs-select');
+        $('.dataTables_filter input[type="search"]').css({'width':'200px'});
+    });
+</script>

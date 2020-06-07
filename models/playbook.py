@@ -17,7 +17,8 @@ class _playbook(db._document):
 
     _dbCollection = db.db[dbCollectionName]
 
-    def new(self, name, occurrence, version):
+    def new(self, acl, name, occurrence, version):
+        self.acl = acl
         self.name = name
         self.occurrence = occurrence
         self.version = version

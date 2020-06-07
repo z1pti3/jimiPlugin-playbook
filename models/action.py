@@ -7,6 +7,7 @@ class _playbookStart(action._action):
     occurrence = str()
     version = float()
     alwaysRun = bool()
+    maxAttempts = int()
 
     def __init__(self):
         cache.globalCache.newCache("playbookCache")
@@ -15,11 +16,11 @@ class _playbookStart(action._action):
         name = helpers.evalString(self.name,{"data" : data})
         occurrence = helpers.evalString(self.occurrence,{"data" : data})
         # Build a UID match for future reference
-        match = "{0}-{1}-{2}".format(self.id,name,occurrence)
+        match = "{0}-{1}-{2}".format(self._id,name,occurrence)
 
         plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
         if not plays:
-            playID = playbook._playbook().new(name,occurrence,self.version).inserted_id
+            playID = playbook._playbook().new(self.acl,name,occurrence,self.version).inserted_id
             play = playbook._playbook().getAsClass(id=playID)[0]
             data["plugin"]["playbook"] = play
             actionResult["result"] = True
@@ -49,10 +50,10 @@ class _playbookStart(action._action):
 
 class _playbookEnd(action._action):
     result = bool()
-    resultData = str()
+    resultData = dict()
 
     def run(self,data,persistentData,actionResult):
-        resultData = helpers.evalString(self.resultData,{"data" : data})
+        resultData = helpers.evalDict(self.resultData,{"data" : data})
 
         if "playbook" in data["plugin"]:
             play = data["plugin"]["playbook"]
