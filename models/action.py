@@ -22,13 +22,13 @@ class _playbookStart(action._action):
         if not plays:
             playID = playbook._playbook().new(self.acl,name,occurrence,self.version).inserted_id
             play = playbook._playbook().getAsClass(id=playID)[0]
-            data["plugin"]["playbook"] = play
+            data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
             actionResult["result"] = True
             actionResult["rc"] = 201
             return actionResult
         else:
             play = plays[0]
-            data["plugin"]["playbook"] = play
+            data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
             if ((play.version < self.version) or (self.alwaysRun)):
                 play.newPlay(self.version)
                 actionResult["result"] = True
@@ -54,17 +54,20 @@ class _playbookEnd(action._action):
 
     def run(self,data,persistentData,actionResult):
         resultData = helpers.evalDict(self.resultData,{"data" : data})
-
         if "playbook" in data["plugin"]:
-            play = data["plugin"]["playbook"]
-            play.endPlay(self.result,resultData)
-            actionResult["result"] = True
-            actionResult["rc"] = 0
-            return actionResult
-        else:
-            actionResult["result"] = False
-            actionResult["rc"] = 404
-            return actionResult
+            match = data["plugin"]["playbook"]["match"]
+            name = data["plugin"]["playbook"]["name"]
+            occurrence = data["plugin"]["playbook"]["occurrence"]
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
+            if plays:
+                play = plays[0]
+                play.endPlay(self.result,resultData)
+                actionResult["result"] = True
+                actionResult["rc"] = 0
+                return actionResult
+        actionResult["result"] = False
+        actionResult["rc"] = 404
+        return actionResult
 
 
 def getPlaybookObject(match,sessionData,name,occurrence):
