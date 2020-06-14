@@ -8,6 +8,7 @@ class _playbookStart(action._action):
     version = float()
     alwaysRun = bool()
     maxAttempts = int()
+    keepHistory = bool()
 
     def __init__(self):
         cache.globalCache.newCache("playbookCache")
@@ -20,22 +21,32 @@ class _playbookStart(action._action):
 
         plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
         if not plays:
-            playID = playbook._playbook().new(self.acl,name,occurrence,self.version).inserted_id
-            play = playbook._playbook().getAsClass(id=playID)[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
-            actionResult["result"] = True
-            actionResult["rc"] = 201
-            return actionResult
+            playbook._playbook().new(self.acl,name,occurrence,self.version)
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
+            if plays:
+                if len(plays) > 1:
+                    for p in range(1,len(plays)):
+                        plays[p].delete()
+                    plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,forceUpdate=True)
+                play = plays[0]
+                data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
+                actionResult["result"] = True
+                actionResult["rc"] = 201
+                return actionResult
         else:
+            if len(plays) > 1:
+                for p in range(1,len(plays)):
+                    plays[p].delete()
+                plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,forceUpdate=True)
             play = plays[0]
             data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
             if ((play.version < self.version) or (self.alwaysRun)):
-                play.newPlay(self.version)
+                play.newPlay(self.version,self.keepHistory)
                 actionResult["result"] = True
                 actionResult["rc"] = 205
                 return actionResult
             elif ((play.result == False) and (play.attempt < self.maxAttempts)):
-                play.replay()
+                play.replay(self.keepHistory)
                 actionResult["result"] = True
                 actionResult["rc"] = 302
                 return actionResult

@@ -1,5 +1,5 @@
 import time
-from core import db
+from core import db, audit
 
 # Initialize
 dbCollectionName = "playbook"
@@ -13,8 +13,7 @@ class _playbook(db._document):
     startTime = int()
     endTime = int()
     attempt = int()
-    history = list()
-
+    
     _dbCollection = db.db[dbCollectionName]
 
     def new(self, acl, name, occurrence, version):
@@ -31,9 +30,9 @@ class _playbook(db._document):
         self.endTime = int(time.time())
         self.update(["result","result","endTime"])
 
-    def replay(self):
-        self.history.append( { "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt } )
-        self.update(["history"])
+    def replay(self,keepHistory=False):
+        if keepHistory:
+            audit._audit().add("playbook","history",{ "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt })
         self.startTime = int(time.time())
         self.endTime = 0
         self.resultData = {}
@@ -41,9 +40,9 @@ class _playbook(db._document):
         self.attempt += 1
         self.update(["startTime","endTime","resultData","result","attempt"])
 
-    def newPlay(self, version):
-        self.history.append( { "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt } )
-        self.update(["history"])
+    def newPlay(self, version, keepHistory=False):
+        if keepHistory:
+            audit._audit().add("playbook","history",{ "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt })
         self.version = version
         self.startTime = int(time.time())
         self.endTime = 0
