@@ -28,7 +28,7 @@ class _playbook(db._document):
         self.result = result
         self.resultData = resultData
         self.endTime = int(time.time())
-        self.update(["result","result","endTime"])
+        self.update(["result","resultData","endTime"])
 
     def replay(self,keepHistory=False):
         if keepHistory:
