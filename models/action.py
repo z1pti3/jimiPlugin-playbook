@@ -1,3 +1,5 @@
+import time
+
 from core import helpers, cache
 from core.models import action
 from plugins.playbook.models import playbook
@@ -9,6 +11,7 @@ class _playbookStart(action._action):
     alwaysRun = bool()
     maxAttempts = int()
     keepHistory = bool()
+    delayBetweenAttempts = int()
 
     def __init__(self):
         cache.globalCache.newCache("playbookCache")
@@ -40,22 +43,37 @@ class _playbookStart(action._action):
                 plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,forceUpdate=True)
             play = plays[0]
             data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
+
+            delayBetweenAttempts = 60
+            if self.delayBetweenAttempts != 0 :
+                delayBetweenAttempts = self.delayBetweenAttempts
+
+            if play.startTime + delayBetweenAttempts > time.time():
+                actionResult["result"] = False
+                actionResult["msg"] = "Delay time between attempts not met"
+                actionResult["rc"] = 300
+                return actionResult
+
             if ((play.version < self.version) or (self.alwaysRun)):
                 play.newPlay(self.version,self.keepHistory)
                 actionResult["result"] = True
+                actionResult["msg"] = "Complete"
                 actionResult["rc"] = 205
                 return actionResult
             elif ((play.result == False) and (play.attempt < self.maxAttempts)):
                 play.replay(self.keepHistory)
                 actionResult["result"] = True
+                actionResult["msg"] = "Complete on additional attempt"
                 actionResult["rc"] = 302
                 return actionResult
 
             actionResult["result"] = False
+            actionResult["msg"] = "Nothing to do"
             actionResult["rc"] = 304
             return actionResult
        
         actionResult["result"] = False
+        actionResult["msg"] = "Unknown"
         actionResult["rc"] = 500
         return actionResult
 
@@ -74,9 +92,11 @@ class _playbookEnd(action._action):
                 play = plays[0]
                 play.endPlay(self.result,resultData)
                 actionResult["result"] = True
+                actionResult["msg"] = "Playbook Complete Success"
                 actionResult["rc"] = 0
                 return actionResult
         actionResult["result"] = False
+        actionResult["msg"] = "Playbook Complete Failure"
         actionResult["rc"] = 404
         return actionResult
 
