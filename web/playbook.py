@@ -4,6 +4,7 @@ from flask import current_app as app
 from pathlib import Path
 import time
 
+from core import api
 from plugins.playbook.models import playbook
 
 pluginPages = Blueprint('playbookPages', __name__, template_folder="templates")
@@ -16,3 +17,12 @@ def mainPage():
         plays.append(play)
     return render_template("playbook.html", plays=plays)
 
+
+@pluginPages.route("/playbook/<occurrenceID>/clear/")
+def clearPlaybookOccurrence(occurrenceID):
+    foundOccurence =  playbook._playbook().query(sessionData=api.g.sessionData,id=occurrenceID)["results"]
+    if len(foundOccurence) == 1:
+        playbook._playbook().api_delete(id=occurrenceID)
+        return {}, 200
+    else:
+        return (), 404

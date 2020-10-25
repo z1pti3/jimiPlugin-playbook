@@ -22,15 +22,19 @@ class _playbookStart(action._action):
         # Build a UID match for future reference
         match = "{0}-{1}-{2}".format(self._id,name,occurrence)
 
-        plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
+        delayBetweenAttempts = 300
+        if self.delayBetweenAttempts != 0 :
+            delayBetweenAttempts = self.delayBetweenAttempts
+
+        plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts)
         if not plays:
             playbook._playbook().new(self.acl,name,occurrence,self.version)
-            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts)
             if plays:
                 if len(plays) > 1:
                     for p in range(1,len(plays)):
                         plays[p].delete()
-                    plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,forceUpdate=True)
+                    plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
                 play = plays[0]
                 data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
                 actionResult["result"] = True
@@ -40,13 +44,9 @@ class _playbookStart(action._action):
             if len(plays) > 1:
                 for p in range(1,len(plays)):
                     plays[p].delete()
-                plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,forceUpdate=True)
+                plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
             data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
-
-            delayBetweenAttempts = 60
-            if self.delayBetweenAttempts != 0 :
-                delayBetweenAttempts = self.delayBetweenAttempts
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False

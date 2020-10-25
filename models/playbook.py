@@ -25,12 +25,16 @@ class _playbook(db._document):
         return super(_playbook, self).new()
 
     def endPlay(self, result=False, resultData={}):
+        if self.result == True:
+            return
         self.result = result
         self.resultData = resultData
         self.endTime = int(time.time())
         self.update(["result","resultData","endTime"])
 
     def replay(self,keepHistory=False):
+        if self.result == True:
+            return
         if keepHistory:
             audit._audit().add("playbook","history",{ "startTime" : self.startTime, "endTime" : self.endTime, "result" : self.result, "resultData" : self.resultData, "version" : self.version, "attempt" : self.attempt })
         self.startTime = int(time.time())
