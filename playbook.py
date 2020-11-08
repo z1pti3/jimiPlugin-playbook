@@ -1,7 +1,7 @@
 from core import plugin, model
 
 class _playbook(plugin._plugin):
-    version = 0.2
+    version = 0.3
 
     def install(self):
         # Register models
