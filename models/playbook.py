@@ -13,14 +13,16 @@ class _playbook(db._document):
     startTime = int()
     endTime = int()
     attempt = int()
+    sequence = int()
     
     _dbCollection = db.db[dbCollectionName]
 
-    def new(self, acl, name, occurrence, version):
+    def new(self, acl, name, occurrence, version, sequence):
         self.acl = acl
         self.name = name
         self.occurrence = occurrence
         self.version = version
+        self.sequence = sequence
         self.startTime = int(time.time())
         return super(_playbook, self).new()
 

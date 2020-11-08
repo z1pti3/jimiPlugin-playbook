@@ -5,38 +5,56 @@ from core.models import action
 from plugins.playbook.models import playbook
 
 class _playbookStart(action._action):
-    name = str()
+    playbookName = str()
     occurrence = str()
     version = float()
     alwaysRun = bool()
     maxAttempts = int()
     keepHistory = bool()
     delayBetweenAttempts = int()
+    sequence = int()
 
     def __init__(self):
         cache.globalCache.newCache("playbookCache")
 
     def run(self,data,persistentData,actionResult):
-        name = helpers.evalString(self.name,{"data" : data})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data})
         occurrence = helpers.evalString(self.occurrence,{"data" : data})
-        # Build a UID match for future reference
-        match = "{0}-{1}-{2}".format(self._id,name,occurrence)
 
         delayBetweenAttempts = 300
         if self.delayBetweenAttempts != 0 :
             delayBetweenAttempts = self.delayBetweenAttempts
 
-        plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts)
+        if self.sequence > 0:
+            match = "{0}-{1}-{2}".format(playbookName,occurrence,self.sequence-1)
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence-1,customCacheTime=delayBetweenAttempts)
+            if plays:
+                play = plays[0]
+                if not play.result:
+                    actionResult["result"] = False
+                    actionResult["msg"] = "Previous sequence not completed successfully"
+                    actionResult["rc"] = 403
+                    return actionResult
+            else:
+                actionResult["result"] = False
+                actionResult["msg"] = "No previous sequence attempted"
+                actionResult["rc"] = 404
+                return actionResult
+
+        # Build a UID match for future reference
+        match = "{0}-{1}-{2}".format(playbookName,occurrence,self.sequence)
+
+        plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
         if not plays:
-            playbook._playbook().new(self.acl,name,occurrence,self.version)
-            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts)
+            playbook._playbook().new(self.acl,playbookName,occurrence,self.version,self.sequence)
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
             if plays:
                 if len(plays) > 1:
                     for p in range(1,len(plays)):
                         plays[p].delete()
-                    plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
+                    plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
                 play = plays[0]
-                data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
+                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence }
                 actionResult["result"] = True
                 actionResult["rc"] = 201
                 return actionResult
@@ -44,9 +62,9 @@ class _playbookStart(action._action):
             if len(plays) > 1:
                 for p in range(1,len(plays)):
                     plays[p].delete()
-                plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
+                plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": name, "occurrence": occurrence }
+            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence }
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False
@@ -85,9 +103,10 @@ class _playbookEnd(action._action):
         resultData = helpers.evalDict(self.resultData,{"data" : data})
         if "playbook" in data["plugin"]:
             match = data["plugin"]["playbook"]["match"]
-            name = data["plugin"]["playbook"]["name"]
+            playbookName = data["plugin"]["playbook"]["name"]
             occurrence = data["plugin"]["playbook"]["occurrence"]
-            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,name,occurrence,extendCacheTime=True)
+            sequence = data["plugin"]["playbook"]["sequence"]
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,sequence,extendCacheTime=True)
             if plays:
                 play = plays[0]
                 play.endPlay(self.result,resultData)
@@ -101,5 +120,5 @@ class _playbookEnd(action._action):
         return actionResult
 
 
-def getPlaybookObject(match,sessionData,name,occurrence):
-    return playbook._playbook().getAsClass(query={"name" : name, "occurrence" : occurrence })
+def getPlaybookObject(match,sessionData,playbookName,occurrence,sequence):
+    return playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence, "sequence" : sequence })
