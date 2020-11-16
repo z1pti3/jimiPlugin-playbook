@@ -64,7 +64,7 @@ class _playbookStart(action._action):
                     plays[p].delete()
                 plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence }
+            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence }
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False
