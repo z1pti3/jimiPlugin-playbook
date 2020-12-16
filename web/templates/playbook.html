@@ -3,8 +3,7 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='includes/datatables/css/dataTables.bootstrap.css') }}">
 <script src="{{ url_for('static', filename='includes/datatables/js/dataTables.bootstrap.js') }}"></script>
-<link rel="stylesheet" href="{{ url_for('static', filename='includes/datatables/css/fixedHeader.dataTables.min.css') }}">
-<script src="{{ url_for('static', filename='includes/datatables/js/dataTables.fixedHeader.min.js') }}"></script>
+
 
 <link rel="stylesheet" href="{{ url_for('static', filename='includes/bootstrap-3.3.7/css/bootstrap.min.css') }}">
 <script src="{{ url_for('static', filename='includes/bootstrap-3.3.7/js/bootstrap.min.js') }}"></script>
@@ -17,63 +16,69 @@
 
 <link rel="stylesheet" href="{{ url_for('static', filename='themes/default/default.css') }}">
 
+
+
+<script src="/plugin/playbook/includes/plotly-1.2.0.min.js"></script>
+
 <html>
     <head>
         
     </head>
     <body class="theme-panelContainer">
+        <p>Playbook: {{name}}</p>
+        <div id="pie" style=""></div>
+        <br/>
         <table id="orderTable" class="table table-sm theme-table" cellspacing="0" width="100%">
             <thead class="theme-tableHeader">
-                <tr>
-                    <th class="th-sm">_id</th>
-                    <th class="th-sm">name</th>
-                    <th class="th-sm">Sequence</th>
-                    <th class="th-sm">version</th>
-                    <th class="th-sm">occurrence</th>
-                    <th class="th-sm">startTime</th>
-                    <th class="th-sm">endTime</th>
-                    <th class="th-sm">attempt</th>
-                    <th class="th-sm">result</th>
-                    <th class="th-sm">resultData</th>
-                    <th class="th-sm">history</th>
-                </tr>
             </thead>
             <tbody class="theme-tableBody">
-                {% for play in plays %}
-                    <tr>
-                        <td>{{ play['_id'] }}</td>
-                        <td>{{ play['name'] }}</td>
-                        <td>{{ play['sequence'] }}</td>
-                        <td>{{ play['version'] }}</td>
-                        <td>{{ play['occurrence'] }}</td>
-                        <td>{{ play['startTime'] }}</td>
-                        <td>{{ play['endTime'] }}</td>
-                        <td>{{ play['attempt'] }}</td>
-                        <td>{{ play['result'] }}</td>
-                        <td>{{ play['resultData'] }}</td>
-                        <td>{{ play['history'] }}</td>
-                        <td><button class="btn btn-primary theme-panelButton clearPlay" id="{{ play['_id'] }}">Delete</button></td>
-                    </tr>
-                {% endfor %}
             </tbody>
         </table>
     </body>
 </html>
 
-
 <script>
     $(document).ready(function () {
+        $.fn.dataTable.moment('DD-MMM-YY HH:mm:ss');
+        var tableData = {{ content|tojson }}
         $('#orderTable').DataTable({
             "stripeClasses" : [ 'theme-tableRowOdd', 'theme-tableRowEven' ],
-            fixedHeader: {
-                header: true,
-                footer: true
-            },
-            "paging" : false
+            "paging" : true,
+            "order" : [[ 0, "desc" ]],
+            "autoWidth": false,
+            columns : [
+                { "data": "_id", "name": "_id", "title": "_id", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "name", "name": "name", "title": "name", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "sequence", "name": "sequence", "title": "sequence", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "version", "name": "version", "title": "version", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "occurrence", "name": "occurrence", "title": "occurrence", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "startTime", "name": "startTime", "title": "startTime", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "endTime", "name": "endTime", "title": "endTime", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "attempt", "name": "attempt", "title": "attempt", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "result", "name": "result", "title": "result", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "data": "resultData", "name": "resultData", "title": "resultData", "width": "50px", render: $.fn.dataTable.render.text() },
+                { "title" : "options", "width": "50px", "data": "options", render: function (data, type, row) {
+                        $button = '<button class="btn btn-primary theme-panelButton clearPlay" id="'+data+'">Delete</button>';
+                        return $button;
+                    } 
+                },
+            ],
+            columnDefs: [{
+                orderable: true
+            }]
         });
         $('.dataTables_length').addClass('bs-select');
         $('.dataTables_filter input[type="search"]').css({'width':'200px'});
         $('.dataTables_filter input[type="search"]').addClass("theme-panelTextbox")
+        var table = $('#orderTable').DataTable();
+        for (content in tableData) {
+            systemID = ""
+            if (tableData[content].hasOwnProperty("systemID")) {
+                systemID = tableData[content]["systemID"]
+            }
+            table.row.add({ "_id" : tableData[content]["_id"], "name" : tableData[content]["name"], "sequence" : tableData[content]["sequence"], "version" : tableData[content]["version"], "occurrence" : tableData[content]["occurrence"], "startTime" : tableData[content]["startTime"], "endTime" : tableData[content]["endTime"], "attempt" : tableData[content]["attempt"], "result" : tableData[content]["result"], "resultData" :  JSON.stringify(tableData[content]["resultData"]), "options" : tableData[content]["_id"] })
+        }
+        table.draw();
     });
 
     $('#orderTable').on('click', '.clearPlay', function(e){
@@ -84,4 +89,42 @@
         })
         $(this).closest('tr').remove()
     })
+
+    function pie(data,HTMLElementID) {
+        values = []
+        labels = []
+        for (key in data) {
+            values.push(data[key])
+            labels.push(key)
+        }
+        var data = [{
+            type: "pie",
+            values: values,
+            labels: labels,
+            textinfo: "label",
+            textposition: "none",
+            automargin: false
+        }]
+
+        var layout = {
+            showlegend: true,
+            plot_bgcolor: "#222222",
+            paper_bgcolor: "#222222",
+            font: {
+                color : "#ddd"
+            },
+            height: 180,
+            margin: {
+                l: 1,
+                r: 1,
+                b: 1,
+                t: 1,
+                pad: 4
+            },
+        }
+
+        Plotly.newPlot(HTMLElementID, data, layout, {staticPlot: true})
+    }
+    var pieData = {{ pie|tojson }}
+    pie(pieData,"pie");
 </script>
