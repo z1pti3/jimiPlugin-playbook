@@ -48,8 +48,8 @@ def getPlaybookByName(playbookName):
     return render_template("playbook.html", content=plays, pie=pie, name=playbookName)
 
 
-@pluginPages.route("/playbook/<occurrenceID>/clear/")
-def clearPlaybookOccurrence(occurrenceID):
+@pluginPages.route("/playbook/<playbookName>/<occurrenceID>/clear/")
+def clearPlaybookOccurrence(playbookName,occurrenceID):
     foundOccurence =  playbook._playbook().query(sessionData=api.g.sessionData,id=occurrenceID)["results"]
     if len(foundOccurence) == 1:
         playbook._playbook().api_delete(id=occurrenceID)
