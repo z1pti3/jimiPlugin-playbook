@@ -29,8 +29,9 @@ def mainPage():
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData)["results"]
     playbooks = []
     for play in foundPlays:
-        if play["name"] not in playbooks:
-            playbooks.append(play["name"])
+        if "name" in play:
+            if play["name"] not in playbooks:
+                playbooks.append(play["name"])
     return render_template("playbooks.html", content=playbooks)
 
 
