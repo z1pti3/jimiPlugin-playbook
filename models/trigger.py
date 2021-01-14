@@ -9,12 +9,13 @@ class _playbookSearch(trigger._trigger):
     sequence = int()
     inComplete = bool()
     excludeIncrementSequence = bool()
+    playbookLimit = 5
 
     def check(self):
-        playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete })["results"]
+        playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit)["results"]
         incrementOccurrences = []
         if self.excludeIncrementSequence:
-            playbooks2 = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence + 1, "result" : True })["results"]
+            playbooks2 = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
             incrementOccurrences = [ x["occurrence"] for x in playbooks2 ]
         results = []
         for playbookItem in playbooks:
