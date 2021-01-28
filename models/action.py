@@ -119,6 +119,25 @@ class _playbookEnd(action._action):
         actionResult["rc"] = 404
         return actionResult
 
+class _playbookGet(action._action):
+    occurrence = str()
+    playbookName = str()
+
+    def run(self,data,persistentData,actionResult):
+        occurrence = helpers.evalString(self.occurrence,{"data" : data})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data})
+
+        playbookResult = playbook._playbook().query(query={"name" : playbookName, "occurrence" : occurrence })["results"]
+        if len(playbookResult) > 0:
+            actionResult["result"] = True
+            actionResult["msg"] = "Play found"
+            actionResult["playbook"] = playbookResult[0]
+            actionResult["rc"] = 0
+            return actionResult
+        actionResult["result"] = False
+        actionResult["msg"] = "Play not found"
+        actionResult["rc"] = 404
+        return actionResult
 
 def getPlaybookObject(match,sessionData,playbookName,occurrence,sequence):
     return playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence, "sequence" : sequence })
