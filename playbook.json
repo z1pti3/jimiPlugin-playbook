@@ -1,0 +1,230 @@
+{
+    "name" : "playbook",
+    "author" : "z1p",
+    "version" : 1.0,
+    "categories" : ["automation"],
+    "description" : "Playbook style configuration management and automation. Enables controls over what has been targeted, completed, error's and reties of flows. Playbook enables you to quickly modify flows and track where it has been applied. Advanced functionality includes chaining playbooks one after another.",
+    "icon" : null,
+    "requirements" : {
+        "jimi_min_version" : null,
+        "jimi_max_version" : null,
+        "plugins" : []
+    },
+    "collections" : {
+        "occurrence" : {
+            "display_name" : "playbook",
+            "className" : "_playbook",
+            "class_location" : "models.playbook",
+            "description" : "Collection that holds playbook state information.",
+            "fields" : [
+                { "schema_item" : "name", "schema_value" : "name", "type" : "input", "label" : "name", "description" : "Playbook name." },
+                { "schema_item" : "occurrence", "schema_value" : "occurrence", "type" : "input", "label" : "occurrence", "description" : "The occurrence UID for a given playbook." },
+                { "schema_item" : "version", "schema_value" : "version", "type" : "input", "label" : "version", "description" : "Version number of the playbook." },
+                { "schema_item" : "resultData", "schema_value" : "resultData", "type" : "json-input", "label" : "resultData", "description" : "Output data stored when a playbook is ended." },
+                { "schema_item" : "result", "schema_value" : "result", "type" : "checkbox", "label" : "result", "description" : "Defines if a given playbook occurrence has been completed successfully or not." },
+                { "schema_item" : "startTime", "schema_value" : "startTime", "type" : "input", "label" : "startTime", "description" : "When the playbook occurrence was last started." },
+                { "schema_item" : "endTime", "schema_value" : "endTime", "type" : "input", "label" : "endTime", "description" : "When the playbook occurrence was last ended." },
+                { "schema_item" : "attempt", "schema_value" : "attempt", "type" : "input", "label" : "attempt", "description" : "Number of attempts tried." },
+                { "schema_item" : "sequence", "schema_value" : "sequence", "type" : "input", "label" : "sequence", "description" : "Current playbook sequence number." }
+            ],
+            "data_out" : {
+
+            }
+        }
+    },
+    "triggers" : {
+        "playbookSearch" : {
+            "display_name" : "playbookSearch",
+            "className" : "_playbookSearch",
+            "class_location" : "models.trigger",
+            "description" : "Trigger for looping through playbooks and there occurrences.",
+            "fields" : [
+                { "schema_item" : "playbookName", "schema_value" : "playbookName", "type" : "input", "label" : "playbookName", "description" : "The name of the playbook.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "sequence", "schema_value" : "sequence", "type" : "input", "label" : "sequence", "description" : "The sequence number of find.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "inComplete", "schema_value" : "inComplete", "type" : "checkbox", "label" : "inComplete", "description" : "When True incomplete playbooks will also be returned for the given playbookName and sequence number.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "excludeIncrementSequence", "schema_value" : "excludeIncrementSequence", "type" : "checkbox", "label" : "excludeIncrementSequence", "description" : "When True any playbook occurrences that have a higher completed sequence will be excluded from the results.", "required" : true, "jimi_syntax" : false }
+            ],
+            "data_out" : {
+                "event.name" : { 
+                    "description" : "Occurrence name.",
+                    "type" : "string",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.version" : { 
+                    "description" : "Occurrence version.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.resultData" : { 
+                    "description" : "Occurrence data defined when a playbook was ended.",
+                    "type" : "json",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.result" : { 
+                    "description" : "Occurrence result value.",
+                    "type" : "boolean",
+                    "always_present" : true,
+                    "values" : {
+                        "True" : { "description" : "Playbook for current occurrence completed." },
+                        "False" : { "description" : "Playbook for current occurrence incomplete." }
+                    }
+                },
+                "event.startTime" : { 
+                    "description" : "Occurrence latest attempt start time.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.endTime" : { 
+                    "description" : "Occurrence latest attempt end time.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.attempt" : { 
+                    "description" : "Occurrence current attempt count.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                },
+                "event.sequence" : { 
+                    "description" : "Occurrence current sequence number.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                    }
+                }
+            }
+        }
+    },
+    "actions" : {
+        "playbookStart" : {
+            "display_name" : "playbookStart",
+            "className" : "_playbookStart",
+            "class_location" : "models.action",
+            "description" : "Used to start a playbook for a provided playbook occurrence UID string.",
+            "fields" : [
+                { "schema_item" : "playbookName", "schema_value" : "playbookName", "type" : "input", "label" : "playbookName", "description" : "The name for this playbook.", "required" : true, "jimi_syntax" : true },
+                { "schema_item" : "occurrence", "schema_value" : "occurrence", "type" : "input", "label" : "occurrence", "description" : "Occurrence string used to define a UID for playbook attempts. i.e. %%data[event][hostname]%%", "required" : true, "jimi_syntax" : true },
+                { "schema_item" : "version", "schema_value" : "version", "type" : "input", "label" : "version", "description" : "Version number for the playbook.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "alwaysRun", "schema_value" : "alwaysRun", "type" : "checkbox", "label" : "alwaysRun", "description" : "When True a playbook will always run even if it has been completed or the attempt numbers have exceeded. Delay between attempts is still honored.", "required" : false, "jimi_syntax" : false },
+                { "schema_item" : "maxAttempts", "schema_value" : "maxAttempts", "type" : "input", "label" : "maxAttempts", "description" : "Number of times to try a playbook for a given occurrence UID before giving up.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "keepHistory", "schema_value" : "keepHistory", "type" : "checkbox", "label" : "keepHistory", "description" : "When True history is outputted to the audit log when state changes for a given UID.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "delayBetweenAttempts", "schema_value" : "delayBetweenAttempts", "type" : "input", "label" : "delayBetweenAttempts", "description" : "Number in seconds to wait between attempts per occurrence UID.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "sequence", "schema_value" : "sequence", "type" : "input", "label" : "sequence", "description" : "This playbooks flows sequence number, used when multiple flows are used for a playbook one after another. Defaults to 0", "required" : false, "jimi_syntax" : false }
+            ],
+            "data_out" : {
+                "result" : { 
+                    "description" : "Returns True if the action completed successfully.",
+                    "type" : "boolean",
+                    "always_present" : true,
+                    "values" : {
+                        "True" : { "description" : "Action completed successfully." },
+                        "False" : { "description" : "Action did not complete successfully." }
+                    }
+                },
+                "rc" : {
+                    "description" : "Returns the exit code for the action.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                        "201" : { "description" : "New playbook started for the provided UID." },
+                        "205" : { "description" : "Playbook already completed." },
+                        "300" : { "description" : "Wait time between attempts has not been met." },
+                        "302" : { "description" : "Retry the playbook." },
+                        "304" : { "description" : "No work to do for this UID." },
+                        "403" : { "description" : "Previous sequence not completed yet. Make sure that at-least sequence n-1 has been completed." },
+                        "404" : { "description" : "No previous sequence attempted, make sure a playbook with sequence 0 first." },
+                        "500" : { "description" : "Unknown error occurred." }
+                    }
+                },
+                "plugin.playbook.match" : {
+                    "description" : "Match UID for the playbook.",
+                    "type" : "string",
+                    "always_present" : false,
+                    "values" : {
+                    }
+                },
+                "plugin.playbook.name" : {
+                    "description" : "Name of the playbook run.",
+                    "type" : "string",
+                    "always_present" : false,
+                    "values" : {
+                    }
+                },
+                "plugin.playbook.occurrence" : {
+                    "description" : "The occurrence string for the playbook run.",
+                    "type" : "string",
+                    "always_present" : false,
+                    "values" : {
+                    }
+                },
+                "plugin.playbook.sequence" : {
+                    "description" : "Current playbook run sequence number.",
+                    "type" : "number",
+                    "always_present" : false,
+                    "values" : {
+                    }
+                },
+                "msg" : {
+                    "description" : "A message that outlines additional information about the result.",
+                    "type" : "string",
+                    "always_present" : false,
+                    "values" : {
+                        "(string)" : { "description" : "A message that outlines additional information about the result." }
+                    }
+                }
+            }
+        },
+        "playbookEnd" : {
+            "display_name" : "playbookEnd",
+            "className" : "_playbookEnd",
+            "class_location" : "models.action",
+            "description" : "Define the end of a playbook within a flow.",
+            "fields" : [
+                { "schema_item" : "result", "schema_value" : "result", "type" : "checkbox", "label" : "result", "description" : "Defines if a playbook run was completed successfully or if it failed.", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "resultData", "schema_value" : "resultData", "type" : "json-input", "label" : "resultData", "description" : "Data to store within the playbook record.", "required" : true, "jimi_syntax" : true }
+            ],
+            "data_out" : {
+                "result" : { 
+                    "description" : "Returns True if the action completed successfully.",
+                    "type" : "boolean",
+                    "always_present" : true,
+                    "values" : {
+                        "True" : { "description" : "Action completed successfully." },
+                        "False" : { "description" : "Action did not complete successfully, likely due to no playbookStart action within the flow." }
+                    }
+                },
+                "rc" : {
+                    "description" : "Returns the exit code for the action.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                        "0" : { "description" : "Action completed successfully." },
+                        "404" : { "description" : "Action did not complete successfully, likely due to no playbookStart action within the flow." }
+                    }
+                },
+                "msg" : {
+                    "description" : "A message that outlines additional information about the result.",
+                    "type" : "string",
+                    "always_present" : false,
+                    "values" : {
+                        "(string)" : { "description" : "A message that outlines additional information about the result." }
+                    }
+                }
+            }
+        }
+    },
+    "settings" : {
+
+    }
+}
