@@ -47,7 +47,7 @@
             "data_out" : {
                 "event.name" : { 
                     "description" : "Occurrence name.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : true,
                     "values" : {
                     }
@@ -149,21 +149,21 @@
                 },
                 "plugin.playbook.match" : {
                     "description" : "Match UID for the playbook.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : false,
                     "values" : {
                     }
                 },
                 "plugin.playbook.name" : {
                     "description" : "Name of the playbook run.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : false,
                     "values" : {
                     }
                 },
                 "plugin.playbook.occurrence" : {
                     "description" : "The occurrence string for the playbook run.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : false,
                     "values" : {
                     }
@@ -177,7 +177,7 @@
                 },
                 "msg" : {
                     "description" : "A message that outlines additional information about the result.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : false,
                     "values" : {
                         "(string)" : { "description" : "A message that outlines additional information about the result." }
@@ -215,7 +215,7 @@
                 },
                 "msg" : {
                     "description" : "A message that outlines additional information about the result.",
-                    "type" : "string",
+                    "type" : "text",
                     "always_present" : false,
                     "values" : {
                         "(string)" : { "description" : "A message that outlines additional information about the result." }
