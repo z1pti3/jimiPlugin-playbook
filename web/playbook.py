@@ -39,11 +39,13 @@ def mainPage():
 def getPlaybookByName(playbookName):
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData,query={"name" : playbookName})["results"]
     plays = []
-    pie = {"complete" : 0, "incomplete" : 0}
+    pie = {"complete" : 0, "incomplete" : 0, "running" : 0}
     for play in foundPlays:
         plays.append(play)
         if play["result"]:
             pie["complete"] += 1
+        elif play["endTime"] == 0:
+            pie["running"] += 1
         else:
             pie["incomplete"] += 1
     return render_template("playbook.html", content=plays, pie=pie, name=playbookName)
