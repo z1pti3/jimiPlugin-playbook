@@ -175,6 +175,13 @@
                     "values" : {
                     }
                 },
+                "plugin.playbook.version" : {
+                    "description" : "Current playbook version.",
+                    "type" : "number",
+                    "always_present" : false,
+                    "values" : {
+                    }
+                },
                 "msg" : {
                     "description" : "A message that outlines additional information about the result.",
                     "type" : "text",
