@@ -34,7 +34,6 @@ def mainPage():
                 playbooks.append(play["name"])
     return render_template("playbooks.html", content=playbooks)
 
-
 @pluginPages.route("/playbook/<playbookName>/")
 def getPlaybookByName(playbookName):
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData,query={"name" : playbookName})["results"]

@@ -222,6 +222,44 @@
                     }
                 }
             }
+        },
+        "playbookUpdate" : {
+            "display_name" : "playbookUpdate",
+            "className" : "_playbookUpdate",
+            "class_location" : "models.action",
+            "description" : "Update the position of an occurrence within the playbook",
+            "fields" : [
+                { "schema_item" : "stage", "schema_value" : "stage", "type" : "input", "label" : "stage", "description" : "Defines the stage the play is currently at", "required" : true, "jimi_syntax" : false },
+                { "schema_item" : "resultData", "schema_value" : "resultData", "type" : "json-input", "label" : "resultData", "description" : "Data to store within the playbook record.", "required" : true, "jimi_syntax" : true }
+            ],
+            "data_out" : {
+                "result" : { 
+                    "description" : "Returns True if the action completed successfully.",
+                    "type" : "boolean",
+                    "always_present" : true,
+                    "values" : {
+                        "True" : { "description" : "Action completed successfully." },
+                        "False" : { "description" : "Action did not complete successfully, likely due to no playbookStart action within the flow." }
+                    }
+                },
+                "rc" : {
+                    "description" : "Returns the exit code for the action.",
+                    "type" : "number",
+                    "always_present" : true,
+                    "values" : {
+                        "0" : { "description" : "Action completed successfully." },
+                        "404" : { "description" : "Action did not complete successfully, likely due to no playbookStart action within the flow." }
+                    }
+                },
+                "msg" : {
+                    "description" : "A message that outlines additional information about the result.",
+                    "type" : "text",
+                    "always_present" : false,
+                    "values" : {
+                        "(string)" : { "description" : "A message that outlines additional information about the result." }
+                    }
+                }
+            }
         }
     },
     "settings" : {

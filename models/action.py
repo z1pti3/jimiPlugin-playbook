@@ -119,6 +119,24 @@ class _playbookEnd(action._action):
         actionResult["rc"] = 404
         return actionResult
 
+class _playbookUpdate(action._action):
+    stage = int()
+    resultData = dict()
+
+    def doAction(self,data):
+        resultData = helpers.evalDict(self.resultData,{"data" : data["flowData"]})
+        if "playbook" in data["flowData"]["plugin"]:
+            match = data["flowData"]["plugin"]["playbook"]["match"]
+            playbookName = data["flowData"]["plugin"]["playbook"]["name"]
+            occurrence = data["flowData"]["plugin"]["playbook"]["occurrence"]
+            sequence = data["flowData"]["plugin"]["playbook"]["sequence"]
+            plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,sequence,extendCacheTime=True)
+            if plays:
+                play = plays[0]
+                play.updatePlay(self.stage,resultData)
+                return { "result" : True, "msg" : "Playbook Update Success", "rc" : 0 } 
+        return { "result" : True, "msg" : "Playbook Update Failure", "rc" : 404 }
+
 class _playbookGet(action._action):
     occurrence = str()
     playbookName = str()

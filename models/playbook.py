@@ -14,6 +14,7 @@ class _playbook(db._document):
     endTime = int()
     attempt = int()
     sequence = int()
+    stage = int()
     
     _dbCollection = db.db[dbCollectionName]
 
@@ -24,6 +25,7 @@ class _playbook(db._document):
         self.version = version
         self.sequence = sequence
         self.startTime = int(time.time())
+        self.stage = 0
         return super(_playbook, self).new()
 
     def endPlay(self, result=False, resultData={}):
@@ -33,6 +35,11 @@ class _playbook(db._document):
         self.resultData = resultData
         self.endTime = int(time.time())
         self.update(["result","resultData","endTime"])
+
+    def updatePlay(self, stage, resultData={}):
+        self.resultData = resultData
+        self.stage = stage
+        self.update(["resultData","stage"])
 
     def replay(self,keepHistory=False):
         if self.result == True:
@@ -55,5 +62,6 @@ class _playbook(db._document):
         self.resultData = {}
         self.result = False
         self.attempt = 0
+        self.stage = 0
         self.update(["version","startTime","endTime","resultData","result","attempt"])
 
