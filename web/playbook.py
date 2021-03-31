@@ -20,11 +20,11 @@ def urlencode_filter(s):
     s = urllib.parse.quote_plus(s)
     return Markup(s)
 
-@pluginPages.route('/playbook/includes/<file>')
+@pluginPages.route('/includes/<file>')
 def custom_static(file):
     return send_from_directory(str(Path("plugins/playbook/web/includes")), file)
 
-@pluginPages.route("/playbook/")
+@pluginPages.route("/")
 def mainPage():
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData)["results"]
     playbooks = []
@@ -35,7 +35,7 @@ def mainPage():
     return render_template("playbooks.html", content=playbooks)
 
 
-@pluginPages.route("/playbook/<playbookName>/")
+@pluginPages.route("/<playbookName>/")
 def getPlaybookByName(playbookName):
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData,query={"name" : playbookName})["results"]
     plays = []
@@ -51,7 +51,7 @@ def getPlaybookByName(playbookName):
     return render_template("playbook.html", content=plays, pie=pie, name=playbookName)
 
 
-@pluginPages.route("/playbook/<playbookName>/<occurrenceID>/clear/")
+@pluginPages.route("/<playbookName>/<occurrenceID>/clear/")
 def clearPlaybookOccurrence(playbookName,occurrenceID):
     foundOccurence =  playbook._playbook().query(sessionData=api.g.sessionData,id=occurrenceID)["results"]
     if len(foundOccurence) == 1:
