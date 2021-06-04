@@ -139,5 +139,39 @@ class _playbookGet(action._action):
         actionResult["rc"] = 404
         return actionResult
 
+class _playbookSearchAction(action._action):
+    playbookName = str()
+    sequence = int()
+    incomplete = bool()
+    excludeIncrementSequence = bool()
+    playbookLimit = 5
+
+    def run(self,data,persistentData,actionResult):
+        playbookName = helpers.evalString(self.playbookName,{"data" : data})
+
+        playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit)["results"]
+        incrementOccurrences = []
+        if self.excludeIncrementSequence:
+            playbooks2 = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
+            incrementOccurrences = [ x["occurrence"] for x in playbooks2 ]
+        results = []
+        for playbookItem in playbooks:
+            result = {}
+            if playbookItem["occurrence"] not in incrementOccurrences:
+                for key ,value in playbookItem.items():
+                    if key not in helpers.systemProperties:
+                        result[key] = value
+                results.append(result)
+        if len(results) > 0:
+            actionResult["result"] = True
+            actionResult["msg"] = "Occurrences found"
+            actionResult["playbook"] = results
+            actionResult["rc"] = 0
+            return actionResult
+        actionResult["result"] = False
+        actionResult["msg"] = "No occurrences not found"
+        actionResult["rc"] = 404
+        return actionResult
+
 def getPlaybookObject(match,sessionData,playbookName,occurrence,sequence):
     return playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence, "sequence" : sequence })
