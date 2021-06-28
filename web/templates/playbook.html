@@ -10,56 +10,8 @@
     <p>Playbook: {{name}}</p>
     <div id="pie" style=""></div>
     <br/>
-    <table id="orderTable" class="table table-sm theme-table" cellspacing="0" width="100%">
-        <thead class="theme-tableHeader">
-        </thead>
-        <tbody class="theme-tableBody">
-        </tbody>
-    </table>
+    {{ jimi.table("1","Results","playbookResultsTable/") }}
     <script>
-        $(document).ready(function () {
-            $.fn.dataTable.moment('DD-MMM-YY HH:mm:ss');
-            var tableData = {{ content|tojson }}
-            $('#orderTable').DataTable({
-                "stripeClasses" : [ 'theme-tableRowOdd', 'theme-tableRowEven' ],
-                "paging" : true,
-                "order" : [[ 0, "desc" ]],
-                "autoWidth": false,
-                columns : [
-                    { "data": "_id", "name": "_id", "title": "_id", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "name", "name": "name", "title": "name", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "sequence", "name": "sequence", "title": "sequence", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "version", "name": "version", "title": "version", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "occurrence", "name": "occurrence", "title": "occurrence", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "startTime", "name": "startTime", "title": "startTime", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "endTime", "name": "endTime", "title": "endTime", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "attempt", "name": "attempt", "title": "attempt", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "result", "name": "result", "title": "result", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "data": "resultData", "name": "resultData", "title": "resultData", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "title" : "options", "width": "50px", "data": "options", render: function (data, type, row) {
-                            $button = '<button class="btn btn-primary theme-panelButton clearPlay" id="'+data+'">Delete</button>';
-                            return $button;
-                        } 
-                    },
-                ],
-                columnDefs: [{
-                    orderable: true
-                }]
-            });
-            $('.dataTables_length').addClass('bs-select');
-            $('.dataTables_filter input[type="search"]').css({'width':'200px'});
-            $('.dataTables_filter input[type="search"]').addClass("theme-panelTextbox")
-            var table = $('#orderTable').DataTable();
-            for (content in tableData) {
-                systemID = ""
-                if (tableData[content].hasOwnProperty("systemID")) {
-                    systemID = tableData[content]["systemID"]
-                }
-                table.row.add({ "_id" : tableData[content]["_id"], "name" : tableData[content]["name"], "sequence" : tableData[content]["sequence"], "version" : tableData[content]["version"], "occurrence" : tableData[content]["occurrence"], "startTime" : tableData[content]["startTime"], "endTime" : tableData[content]["endTime"], "attempt" : tableData[content]["attempt"], "result" : tableData[content]["result"], "resultData" :  JSON.stringify(tableData[content]["resultData"]), "options" : tableData[content]["_id"] })
-            }
-            table.draw();
-        });
-
         $('#orderTable').on('click', '.clearPlay', function(e){
             var row = $(this).closest('tr')
             $.ajax({url:$(this).attr('id')+"/clear/", type:"GET", success: function ( result ) {

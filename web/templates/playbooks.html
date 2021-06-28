@@ -15,7 +15,6 @@
 
     <script>
         $(document).ready(function () {
-            $.fn.dataTable.moment('DD-MMM-YY HH:mm:ss');
             var tableData = {{ content|tojson }}
             $('#orderTable').DataTable({
                 "stripeClasses" : [ 'theme-tableRowOdd', 'theme-tableRowEven' ],

@@ -7,6 +7,7 @@ from plugins.playbook.models import playbook
 class _playbookStart(action._action):
     playbookName = str()
     occurrence = str()
+    playbookData = dict()
     version = float()
     alwaysRun = bool()
     maxAttempts = int()
@@ -20,6 +21,7 @@ class _playbookStart(action._action):
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
         occurrence = helpers.evalString(self.occurrence,{"data" : data})
+        playbookData = helpers.evalDict(self.playbookData,{ "data" : data })
 
         delayBetweenAttempts = 300
         if self.delayBetweenAttempts != 0 :
@@ -46,7 +48,7 @@ class _playbookStart(action._action):
 
         plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
         if not plays:
-            playbook._playbook().new(self.acl,playbookName,occurrence,self.version,self.sequence)
+            playbook._playbook().new(self.acl,playbookName,occurrence,playbookData,self.version,self.sequence)
             plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
             if plays:
                 if len(plays) > 1:
@@ -54,7 +56,7 @@ class _playbookStart(action._action):
                         plays[p].delete()
                     plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
                 play = plays[0]
-                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence, "version" : self.version }
+                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
                 actionResult["result"] = True
                 actionResult["rc"] = 201
                 return actionResult
@@ -64,7 +66,7 @@ class _playbookStart(action._action):
                     plays[p].delete()
                 plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence, "version" : self.version }
+            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False
@@ -139,6 +141,40 @@ class _playbookGet(action._action):
         actionResult["rc"] = 404
         return actionResult
 
+class _playbookAdd(action._action):
+    occurrence = str()
+    playbookName = str()
+    playbookData = dict()
+
+    def doAction(self,data):
+        occurrence = helpers.evalString(self.occurrence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookData = helpers.evalDict(self.playbookData,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookResult = playbook._playbook().query(query={"name" : playbookName, "occurrence" : occurrence })["results"]
+        if len(playbookResult) == 0:
+            playbook._playbook().new(self.acl,playbookName,occurrence,playbookData,-1,0)
+            return { "result" : True, "rc" : 0, "msg" : "Added new playbook entry"}
+        return { "result" : False, "rc" : 1, "msg" : "Existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
+
+class _playbookUpdateData(action._action):
+    occurrence = str()
+    playbookName = str()
+    playbookData = dict()
+
+    def doAction(self,data):
+        occurrence = helpers.evalString(self.occurrence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookData = helpers.evalDict(self.playbookData,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookResult = playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence })
+        if len(playbookResult) > 0:
+            playbookResult = playbookResult[0]
+            playbookResult.playbookData = playbookData
+            playbookResult.update(["playbookData"])
+            return { "result" : True, "rc" : 0, "msg" : "playbookData update "}
+        return { "result" : False, "rc" : 1, "msg" : "No existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
+
 class _playbookSearchAction(action._action):
     playbookName = str()
     sequence = int()
@@ -175,3 +211,4 @@ class _playbookSearchAction(action._action):
 
 def getPlaybookObject(match,sessionData,playbookName,occurrence,sequence):
     return playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence, "sequence" : sequence })
+
