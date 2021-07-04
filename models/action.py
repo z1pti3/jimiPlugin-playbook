@@ -4,6 +4,8 @@ from core import helpers, cache
 from core.models import action
 from plugins.playbook.models import playbook
 
+import jimi
+
 class _playbookStart(action._action):
     playbookName = str()
     occurrence = str()
@@ -174,6 +176,41 @@ class _playbookUpdateData(action._action):
             playbookResult.update(["playbookData"])
             return { "result" : True, "rc" : 0, "msg" : "playbookData update "}
         return { "result" : False, "rc" : 1, "msg" : "No existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
+
+class _playbookStartUpdate(action._action):
+    action_id = str()
+    version = str()
+    maxAttempts = str()
+    delayBetweenAttempts = str()
+    sequence = str()
+
+    def doAction(self,data):
+        action_id = helpers.evalString(self.action_id,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        version = helpers.evalString(self.version,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        maxAttempts = helpers.evalString(self.maxAttempts,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        delayBetweenAttempts = helpers.evalString(self.delayBetweenAttempts,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        sequence = helpers.evalString(self.sequence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookAction = _playbookStart().getAsClass(id=jimi.db.ObjectId(action_id))
+        if len(playbookAction) == 1:
+            playbookAction = playbookAction[0]
+            fields = []
+            if version:
+                playbookAction.version = float(version)
+                fields.append("version")
+            if maxAttempts:
+                playbookAction.maxAttempts = int(maxAttempts)
+                fields.append("maxAttempts")
+            if delayBetweenAttempts:
+                playbookAction.delayBetweenAttempts = int(delayBetweenAttempts)
+                fields.append("delayBetweenAttempts")
+            if sequence:
+                playbookAction.sequence = int(sequence)
+                fields.append("sequence")
+            playbookAction.update([fields])
+            return { "result" : True, "rc" : 0, "msg" : "playbookStart action updated, action_id={0}".format(action_id)}
+        else:
+            return { "result" : False, "rc" : 255, "msg" : "No playbookStart action found, action_id={0}".format(action_id)}
 
 class _playbookSearchAction(action._action):
     playbookName = str()

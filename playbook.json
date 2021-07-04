@@ -1,7 +1,7 @@
 {
    "name": "playbook",
    "author": "z1p",
-   "version": 1.3,
+   "version": 1.4,
    "categories": [
       "automation"
    ],
@@ -692,6 +692,97 @@
                "values": {
                   "0": {
                      "description": "Successful."
+                  }
+               }
+            }
+         }
+      },
+      "playbookStartUpdate": {
+         "display_name": "playbookStartUpdate",
+         "className": "_playbookStartUpdate",
+         "class_location": "models.action",
+         "description": "Update an existing playbookStart action i.e. change version number dynamically.",
+         "fields": [
+            {
+               "schema_item": "action_id",
+               "schema_value": "action_id",
+               "type": "input",
+               "label": "action_id",
+               "description": "The action ID of the playbookStart action to update.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "version",
+               "schema_value": "version",
+               "type": "input",
+               "label": "version",
+               "description": "Version number for the playbook.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "maxAttempts",
+               "schema_value": "maxAttempts",
+               "type": "input",
+               "label": "maxAttempts",
+               "description": "Number of times to try a playbook for a given occurrence UID before giving up.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "delayBetweenAttempts",
+               "schema_value": "delayBetweenAttempts",
+               "type": "input",
+               "label": "delayBetweenAttempts",
+               "description": "Number in seconds to wait between attempts per occurrence UID.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "sequence",
+               "schema_value": "sequence",
+               "type": "input",
+               "label": "sequence",
+               "description": "This playbooks flows sequence number, used when multiple flows are used for a playbook one after another. Defaults to 0",
+               "required": false,
+               "jimi_syntax": true
+            }
+         ],
+         "data_out": {
+            "result": {
+               "description": "Returns True if the action completed successfully.",
+               "type": "boolean",
+               "always_present": true,
+               "values": {
+                  "True": {
+                     "description": "Action completed successfully."
+                  },
+                  "False": {
+                     "description": "Action did not complete successfully."
+                  }
+               }
+            },
+            "rc": {
+               "description": "Returns the exit code for the action.",
+               "type": "number",
+               "always_present": true,
+               "values": {
+                  "0": {
+                     "description": "playbookStart updated successfully."
+                  },
+                  "255": {
+                     "description": "playbookStart action was not found."
+                  }
+               }
+            },
+            "msg": {
+               "description": "A message that outlines additional information about the result.",
+               "type": "text",
+               "always_present": false,
+               "values": {
+                  "(string)": {
+                     "description": "A message that outlines additional information about the result."
                   }
                }
             }
