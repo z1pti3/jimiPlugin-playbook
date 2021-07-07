@@ -85,6 +85,13 @@ class _playbookStart(action._action):
                 actionResult["rc"] = 302
                 return actionResult
 
+            elif ((play.result == False) and (play.attempt >= self.maxAttempts)):
+                play.replay(self.keepHistory)
+                actionResult["result"] = True
+                actionResult["msg"] = "No attempts remaining"
+                actionResult["rc"] = 305
+                return actionResult
+
             actionResult["result"] = False
             actionResult["msg"] = "Nothing to do"
             actionResult["rc"] = 304
