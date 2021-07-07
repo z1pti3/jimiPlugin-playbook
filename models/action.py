@@ -229,10 +229,10 @@ class _playbookSearchAction(action._action):
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
 
-        playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit)["results"]
+        playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit)["results"]
         incrementOccurrences = []
         if self.excludeIncrementSequence:
-            playbooks2 = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
+            playbooks2 = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
             incrementOccurrences = [ x["occurrence"] for x in playbooks2 ]
         results = []
         for playbookItem in playbooks:
