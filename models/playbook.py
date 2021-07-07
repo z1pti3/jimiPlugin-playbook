@@ -7,6 +7,7 @@ dbCollectionName = "playbook"
 class _playbook(db._document):
     name = str()
     occurrence = str()
+    playbookData = dict()
     version = float()
     resultData = dict()
     result = bool()
@@ -17,10 +18,11 @@ class _playbook(db._document):
     
     _dbCollection = db.db[dbCollectionName]
 
-    def new(self, acl, name, occurrence, version, sequence):
+    def new(self, acl, name, occurrence, playbookData, version, sequence):
         self.acl = acl
         self.name = name
         self.occurrence = occurrence
+        self.playbookData = playbookData
         self.version = version
         self.sequence = sequence
         self.startTime = int(time.time())

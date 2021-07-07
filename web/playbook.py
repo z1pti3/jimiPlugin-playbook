@@ -7,6 +7,9 @@ from markupsafe import Markup
 
 import time
 
+import jimi
+
+from web import ui
 from core import api
 from plugins.playbook.models import playbook
 
@@ -34,7 +37,6 @@ def mainPage():
                 playbooks.append(play["name"])
     return render_template("playbooks.html", content=playbooks)
 
-
 @pluginPages.route("/<playbookName>/")
 def getPlaybookByName(playbookName):
     foundPlays = playbook._playbook().query(sessionData=api.g.sessionData,query={"name" : playbookName})["results"]
@@ -48,7 +50,24 @@ def getPlaybookByName(playbookName):
             pie["running"] += 1
         else:
             pie["incomplete"] += 1
-    return render_template("playbook.html", content=plays, pie=pie, name=playbookName)
+    return render_template("playbook.html", pie=pie, name=playbookName)
+
+@pluginPages.route("/<playbookName>/playbookResultsTable/<action>/")
+def activeEventsTable(playbookName,action):
+    foundPlays = playbook._playbook().getAsClass(sessionData=api.g.sessionData,query={"name" : playbookName})
+    total = len(foundPlays)
+    columns = ["_id","name","sequence","version","occurrence","playbookData","startTime","endTime","attempt","result","resultData","options"]
+    table = ui.table(columns,total,total)
+    if action == "build":
+        return table.getColumns() ,200
+    elif action == "poll":
+        # Custom table data so it can be vertical
+        data = []
+        for play in foundPlays:
+            data.append([ui.safe(play._id),ui.dictTable(play.name),ui.dictTable(play.sequence),ui.dictTable(play.version),ui.dictTable(play.occurrence),ui.dictTable(play.playbookData),ui.dictTable(play.startTime),ui.dictTable(play.endTime),ui.dictTable(play.attempt),ui.dictTable(play.result),ui.dictTable(play.resultData),'<button class="btn btn-primary theme-panelButton clearPlay" id="'+play._id+'">Delete</button>'])
+        table.data = data
+        return { "draw" : int(jimi.api.request.args.get('draw')), "recordsTable" : 0, "recordsFiltered" : 0, "recordsTotal" : 0, "data" : data } ,200
+
 
 
 @pluginPages.route("/<playbookName>/<occurrenceID>/clear/")

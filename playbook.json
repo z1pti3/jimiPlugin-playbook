@@ -1,7 +1,7 @@
 {
    "name": "playbook",
    "author": "z1p",
-   "version": 1.2,
+   "version": 1.4,
    "categories": [
       "automation"
    ],
@@ -13,7 +13,7 @@
       "plugins": []
    },
    "collections": {
-      "occurrence": {
+      "playbook": {
          "display_name": "playbook",
          "className": "_playbook",
          "class_location": "models.playbook",
@@ -32,6 +32,13 @@
                "type": "input",
                "label": "occurrence",
                "description": "The occurrence UID for a given playbook."
+            },
+            {
+               "schema_item": "playbookData",
+               "schema_value": "playbookData",
+               "type": "json-input",
+               "label": "playbookData",
+               "description": "Any playbook data to include."
             },
             {
                "schema_item": "version",
@@ -84,109 +91,6 @@
             }
          ],
          "data_out": {}
-      },
-      "playbook": {
-         "display_name": "playbook",
-         "className": "_playbook",
-         "class_location": "models.playbook",
-         "description": "",
-         "fields": [
-            {
-               "schema_item": "name",
-               "schema_value": "name",
-               "type": "input",
-               "label": "name",
-               "description": ""
-            },
-            {
-               "schema_item": "occurrence",
-               "schema_value": "occurrence",
-               "type": "input",
-               "label": "occurrence",
-               "description": ""
-            },
-            {
-               "schema_item": "version",
-               "schema_value": "version",
-               "type": "input",
-               "label": "version",
-               "description": ""
-            },
-            {
-               "schema_item": "resultData",
-               "schema_value": "resultData",
-               "type": "json-input",
-               "label": "resultData",
-               "description": ""
-            },
-            {
-               "schema_item": "result",
-               "schema_value": "result",
-               "type": "checkbox",
-               "label": "result",
-               "description": ""
-            },
-            {
-               "schema_item": "startTime",
-               "schema_value": "startTime",
-               "type": "input",
-               "label": "startTime",
-               "description": ""
-            },
-            {
-               "schema_item": "endTime",
-               "schema_value": "endTime",
-               "type": "input",
-               "label": "endTime",
-               "description": ""
-            },
-            {
-               "schema_item": "attempt",
-               "schema_value": "attempt",
-               "type": "input",
-               "label": "attempt",
-               "description": ""
-            },
-            {
-               "schema_item": "sequence",
-               "schema_value": "sequence",
-               "type": "input",
-               "label": "sequence",
-               "description": ""
-            },
-            {
-               "schema_item": "_dbCollection",
-               "schema_value": "_dbCollection",
-               "type": "input",
-               "label": "_dbCollection",
-               "description": ""
-            }
-         ],
-         "data_out": {
-            "result": {
-               "description": "Returns True when successful.",
-               "type": "boolean",
-               "always_present": true,
-               "values": {
-                  "True": {
-                     "description": "Successful."
-                  },
-                  "False": {
-                     "description": "Failure."
-                  }
-               }
-            },
-            "rc": {
-               "description": "Returns the exit code for the action.",
-               "type": "number",
-               "always_present": true,
-               "values": {
-                  "0": {
-                     "description": "Successful."
-                  }
-               }
-            }
-         }
       }
    },
    "triggers": {
@@ -237,6 +141,12 @@
             "event.name": {
                "description": "Occurrence name.",
                "type": "text",
+               "always_present": true,
+               "values": {}
+            },
+            "event.playbookData": {
+               "description": "Playbook data defined.",
+               "type": "json",
                "always_present": true,
                "values": {}
             },
@@ -316,6 +226,13 @@
                "description": "Occurrence string used to define a UID for playbook attempts. i.e. %%data[event][hostname]%%",
                "required": true,
                "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookData",
+               "schema_value": "playbookData",
+               "type": "json-input",
+               "label": "playbookData",
+               "description": ""
             },
             {
                "schema_item": "version",
@@ -435,6 +352,12 @@
                "always_present": false,
                "values": {}
             },
+            "plugin.playbook.playbookData": {
+               "description": "Playbook data defined.",
+               "type": "json",
+               "always_present": true,
+               "values": {}
+            },
             "plugin.playbook.sequence": {
                "description": "Current playbook run sequence number.",
                "type": "number",
@@ -480,7 +403,7 @@
                "type": "json-input",
                "label": "resultData",
                "description": "Data to store within the playbook record.",
-               "required": true,
+               "required": false,
                "jimi_syntax": true
             }
          ],
@@ -570,6 +493,132 @@
             }
          }
       },
+      "playbookAdd": {
+         "display_name": "playbookAdd",
+         "className": "_playbookAdd",
+         "class_location": "models.action",
+         "description": "Adds a new playbook entry based on a defined occurrence if said occurrence does not already exist within the playbook.",
+         "fields": [
+            {
+               "schema_item": "occurrence",
+               "schema_value": "occurrence",
+               "type": "input",
+               "label": "occurrence",
+               "description": "",
+               "required" : true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookName",
+               "schema_value": "playbookName",
+               "type": "input",
+               "label": "playbookName",
+               "description": "",
+               "required" : true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookData",
+               "schema_value": "playbookData",
+               "type": "json-input",
+               "label": "playbookData",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true
+            }
+         ],
+         "data_out": {
+            "result": {
+               "description": "Returns True when successful.",
+               "type": "boolean",
+               "always_present": true,
+               "values": {
+                  "True": {
+                     "description": "Successful."
+                  },
+                  "False": {
+                     "description": "Existing playbook entry found."
+                  }
+               }
+            },
+            "rc": {
+               "description": "Returns the exit code for the action.",
+               "type": "number",
+               "always_present": true,
+               "values": {
+                  "0": {
+                     "description": "Successful."
+                  },
+                  "1" : {
+                     "description": "Existing playbook entry found."
+                  }
+               }
+            }
+         }
+      },
+      "playbookUpdateData": {
+         "display_name": "playbookUpdateData",
+         "className": "_playbookUpdateData",
+         "class_location": "models.action",
+         "description": "Update playbookData within an existing playbook.",
+         "fields": [
+            {
+               "schema_item": "occurrence",
+               "schema_value": "occurrence",
+               "type": "input",
+               "label": "occurrence",
+               "description": "",
+               "required" : true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookName",
+               "schema_value": "playbookName",
+               "type": "input",
+               "label": "playbookName",
+               "description": "",
+               "required" : true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookData",
+               "schema_value": "playbookData",
+               "type": "json-input",
+               "label": "playbookData",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true
+            }
+         ],
+         "data_out": {
+            "result": {
+               "description": "Returns True when successful.",
+               "type": "boolean",
+               "always_present": true,
+               "values": {
+                  "True": {
+                     "description": "Successful."
+                  },
+                  "False": {
+                     "description": "Existing playbook entry not found."
+                  }
+               }
+            },
+            "rc": {
+               "description": "Returns the exit code for the action.",
+               "type": "number",
+               "always_present": true,
+               "values": {
+                  "0": {
+                     "description": "Successful."
+                  },
+                  "1" : {
+                     "description": "Existing playbook entry not found."
+                  }
+               }
+            }
+         }
+      },
       "playbookSearchAction": {
          "display_name": "playbookSearchAction",
          "className": "_playbookSearchAction",
@@ -643,6 +692,97 @@
                "values": {
                   "0": {
                      "description": "Successful."
+                  }
+               }
+            }
+         }
+      },
+      "playbookStartUpdate": {
+         "display_name": "playbookStartUpdate",
+         "className": "_playbookStartUpdate",
+         "class_location": "models.action",
+         "description": "Update an existing playbookStart action i.e. change version number dynamically.",
+         "fields": [
+            {
+               "schema_item": "action_id",
+               "schema_value": "action_id",
+               "type": "input",
+               "label": "action_id",
+               "description": "The action ID of the playbookStart action to update.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "version",
+               "schema_value": "version",
+               "type": "input",
+               "label": "version",
+               "description": "Version number for the playbook.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "maxAttempts",
+               "schema_value": "maxAttempts",
+               "type": "input",
+               "label": "maxAttempts",
+               "description": "Number of times to try a playbook for a given occurrence UID before giving up.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "delayBetweenAttempts",
+               "schema_value": "delayBetweenAttempts",
+               "type": "input",
+               "label": "delayBetweenAttempts",
+               "description": "Number in seconds to wait between attempts per occurrence UID.",
+               "required": true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "sequence",
+               "schema_value": "sequence",
+               "type": "input",
+               "label": "sequence",
+               "description": "This playbooks flows sequence number, used when multiple flows are used for a playbook one after another. Defaults to 0",
+               "required": false,
+               "jimi_syntax": true
+            }
+         ],
+         "data_out": {
+            "result": {
+               "description": "Returns True if the action completed successfully.",
+               "type": "boolean",
+               "always_present": true,
+               "values": {
+                  "True": {
+                     "description": "Action completed successfully."
+                  },
+                  "False": {
+                     "description": "Action did not complete successfully."
+                  }
+               }
+            },
+            "rc": {
+               "description": "Returns the exit code for the action.",
+               "type": "number",
+               "always_present": true,
+               "values": {
+                  "0": {
+                     "description": "playbookStart updated successfully."
+                  },
+                  "255": {
+                     "description": "playbookStart action was not found."
+                  }
+               }
+            },
+            "msg": {
+               "description": "A message that outlines additional information about the result.",
+               "type": "text",
+               "always_present": false,
+               "values": {
+                  "(string)": {
+                     "description": "A message that outlines additional information about the result."
                   }
                }
             }

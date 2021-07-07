@@ -4,9 +4,12 @@ from core import helpers, cache
 from core.models import action
 from plugins.playbook.models import playbook
 
+import jimi
+
 class _playbookStart(action._action):
     playbookName = str()
     occurrence = str()
+    playbookData = dict()
     version = float()
     alwaysRun = bool()
     maxAttempts = int()
@@ -20,6 +23,7 @@ class _playbookStart(action._action):
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
         occurrence = helpers.evalString(self.occurrence,{"data" : data})
+        playbookData = helpers.evalDict(self.playbookData,{ "data" : data })
 
         delayBetweenAttempts = 300
         if self.delayBetweenAttempts != 0 :
@@ -46,7 +50,7 @@ class _playbookStart(action._action):
 
         plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
         if not plays:
-            playbook._playbook().new(self.acl,playbookName,occurrence,self.version,self.sequence)
+            playbook._playbook().new(self.acl,playbookName,occurrence,playbookData,self.version,self.sequence)
             plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts)
             if plays:
                 if len(plays) > 1:
@@ -54,7 +58,7 @@ class _playbookStart(action._action):
                         plays[p].delete()
                     plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
                 play = plays[0]
-                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence, "version" : self.version }
+                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
                 actionResult["result"] = True
                 actionResult["rc"] = 201
                 return actionResult
@@ -64,7 +68,7 @@ class _playbookStart(action._action):
                     plays[p].delete()
                 plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "sequence": self.sequence, "version" : self.version }
+            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False
@@ -146,6 +150,75 @@ class _playbookGet(action._action):
         actionResult["rc"] = 404
         return actionResult
 
+class _playbookAdd(action._action):
+    occurrence = str()
+    playbookName = str()
+    playbookData = dict()
+
+    def doAction(self,data):
+        occurrence = helpers.evalString(self.occurrence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookData = helpers.evalDict(self.playbookData,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookResult = playbook._playbook().query(query={"name" : playbookName, "occurrence" : occurrence })["results"]
+        if len(playbookResult) == 0:
+            playbook._playbook().new(self.acl,playbookName,occurrence,playbookData,-1,0)
+            return { "result" : True, "rc" : 0, "msg" : "Added new playbook entry"}
+        return { "result" : False, "rc" : 1, "msg" : "Existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
+
+class _playbookUpdateData(action._action):
+    occurrence = str()
+    playbookName = str()
+    playbookData = dict()
+
+    def doAction(self,data):
+        occurrence = helpers.evalString(self.occurrence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookData = helpers.evalDict(self.playbookData,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookResult = playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence })
+        if len(playbookResult) > 0:
+            playbookResult = playbookResult[0]
+            playbookResult.playbookData = playbookData
+            playbookResult.update(["playbookData"])
+            return { "result" : True, "rc" : 0, "msg" : "playbookData update "}
+        return { "result" : False, "rc" : 1, "msg" : "No existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
+
+class _playbookStartUpdate(action._action):
+    action_id = str()
+    version = str()
+    maxAttempts = str()
+    delayBetweenAttempts = str()
+    sequence = str()
+
+    def doAction(self,data):
+        action_id = helpers.evalString(self.action_id,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        version = helpers.evalString(self.version,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        maxAttempts = helpers.evalString(self.maxAttempts,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        delayBetweenAttempts = helpers.evalString(self.delayBetweenAttempts,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        sequence = helpers.evalString(self.sequence,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        playbookAction = _playbookStart().getAsClass(id=jimi.db.ObjectId(action_id))
+        if len(playbookAction) == 1:
+            playbookAction = playbookAction[0]
+            fields = []
+            if version:
+                playbookAction.version = float(version)
+                fields.append("version")
+            if maxAttempts:
+                playbookAction.maxAttempts = int(maxAttempts)
+                fields.append("maxAttempts")
+            if delayBetweenAttempts:
+                playbookAction.delayBetweenAttempts = int(delayBetweenAttempts)
+                fields.append("delayBetweenAttempts")
+            if sequence:
+                playbookAction.sequence = int(sequence)
+                fields.append("sequence")
+            playbookAction.update([fields])
+            return { "result" : True, "rc" : 0, "msg" : "playbookStart action updated, action_id={0}".format(action_id)}
+        else:
+            return { "result" : False, "rc" : 255, "msg" : "No playbookStart action found, action_id={0}".format(action_id)}
+
 class _playbookSearchAction(action._action):
     playbookName = str()
     sequence = int()
@@ -182,3 +255,4 @@ class _playbookSearchAction(action._action):
 
 def getPlaybookObject(match,sessionData,playbookName,occurrence,sequence):
     return playbook._playbook().getAsClass(query={"name" : playbookName, "occurrence" : occurrence, "sequence" : sequence })
+
