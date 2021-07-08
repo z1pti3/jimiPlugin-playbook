@@ -15,6 +15,7 @@ class _playbook(db._document):
     endTime = int()
     attempt = int()
     sequence = int()
+    maxAttempts = int()
     
     _dbCollection = db.db[dbCollectionName]
 

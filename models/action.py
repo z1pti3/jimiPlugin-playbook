@@ -90,8 +90,7 @@ class _playbookStart(action._action):
                 return actionResult
 
             elif ((play.result == False) and (play.attempt >= self.maxAttempts)):
-                play.replay(self.keepHistory)
-                actionResult["result"] = True
+                actionResult["result"] = False
                 actionResult["msg"] = "No attempts remaining"
                 actionResult["rc"] = 305
                 return actionResult
@@ -225,6 +224,7 @@ class _playbookSearchAction(action._action):
     incomplete = bool()
     excludeIncrementSequence = bool()
     playbookLimit = 5
+    excludeMaxAttempts = True
 
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})

@@ -10,6 +10,7 @@ class _playbookSearch(trigger._trigger):
     inComplete = bool()
     excludeIncrementSequence = bool()
     playbookLimit = 5
+    excludeMaxAttempts = True
 
     def check(self):
         playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit)["results"]
