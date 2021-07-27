@@ -19,15 +19,31 @@ class _playbook(db._document):
     
     _dbCollection = db.db[dbCollectionName]
 
-    def new(self, acl, name, occurrence, playbookData, version, sequence):
+    def new(self, acl, name, occurrence, playbookData, version, sequence, startPlay=True):
         self.acl = acl
         self.name = name
         self.occurrence = occurrence
         self.playbookData = playbookData
         self.version = version
         self.sequence = sequence
-        self.startTime = int(time.time())
+        if startPlay:
+            self.startTime = int(time.time())
+        else:
+            self.startTime = 0
         return super(_playbook, self).new()
+
+    def bulkNew(self, bulkClass, acl, name, occurrence, playbookData, version, sequence, startPlay=True):
+        self.acl = acl
+        self.name = name
+        self.occurrence = occurrence
+        self.playbookData = playbookData
+        self.version = version
+        self.sequence = sequence
+        if startPlay:
+            self.startTime = int(time.time())
+        else:
+            self.startTime = 0
+        return super(_playbook, self).bulkNew(bulkClass)
 
     def endPlay(self, result=False, resultData={}):
         if self.result == True:
@@ -59,4 +75,3 @@ class _playbook(db._document):
         self.result = False
         self.attempt = 0
         self.update(["version","startTime","endTime","resultData","result","attempt"])
-

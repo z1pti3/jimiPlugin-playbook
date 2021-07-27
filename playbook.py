@@ -1,7 +1,7 @@
 from core import plugin, model
 
 class _playbook(plugin._plugin):
-    version = 1.4
+    version = 1.45
 
     def install(self):
         # Register models
@@ -14,6 +14,7 @@ class _playbook(plugin._plugin):
         model.registerModel("playbookAdd","_playbookAdd","_action","plugins.playbook.models.action")
         model.registerModel("playbookUpdateData","_playbookUpdateData","_action","plugins.playbook.models.action")
         model.registerModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
+        model.registerModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
         return True
 
     def uninstall(self):
@@ -27,6 +28,7 @@ class _playbook(plugin._plugin):
         model.deregisterModel("playbookAdd","_playbookAdd","_action","plugins.playbook.models.action")
         model.deregisterModel("playbookUpdateData","_playbookUpdateData","_action","plugins.playbook.models.action")
         model.deregisterModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
+        model.deregisterModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
         return True
 
     def upgrade(self,LatestPluginVersion):
@@ -41,4 +43,6 @@ class _playbook(plugin._plugin):
             model.registerModel("playbookUpdateData","_playbookUpdateData","_action","plugins.playbook.models.action")
         if self.version < 1.4:
             model.registerModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
+        if self.version < 1.45:
+            model.registerModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
         return True

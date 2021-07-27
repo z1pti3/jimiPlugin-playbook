@@ -1,6 +1,6 @@
 import time
 
-from core import helpers, cache
+from core import helpers, cache, db
 from core.models import action
 from plugins.playbook.models import playbook
 
@@ -165,6 +165,42 @@ class _playbookAdd(action._action):
             return { "result" : True, "rc" : 0, "msg" : "Added new playbook entry"}
         return { "result" : False, "rc" : 1, "msg" : "Existing playbook entry found, playbook={0}, occurrence={1}".format(playbookName,occurrence)}
 
+class _playbookBulkAdd(action._action):
+    occurrences = list()
+    occurrencesField = str()
+    playbookName = str()
+    playbookData = dict()
+    manual = bool()
+
+    def __init__(self):
+        self.bulkClass = db._bulk()
+
+    def postRun(self):
+        self.bulkClass.bulkOperatonProcessing()
+
+    def doAction(self,data):
+        occurrences = helpers.evalString(self.occurrencesField,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookName = helpers.evalString(self.playbookName,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+        playbookData = helpers.evalDict(self.playbookData,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        newPlaysCount = 0
+
+        if self.manual:
+            occurrences = helpers.evalList(self.occurrences,{"data" : data["flowData"],"eventData" : data["eventData"],"conductData" : data["conductData"],"persistentData" : data["persistentData"]})
+
+        for occurrence in occurrences:
+            playbookResult = playbook._playbook().query(query={"name" : playbookName, "occurrence" : occurrence })["results"]
+            newPlaybook = playbook._playbook()
+            if len(playbookResult) == 0:
+                newPlaysCount += 1
+                newPlaybook.bulkNew(self.bulkClass,self.acl,playbookName,occurrence,playbookData,-1,0,False)
+
+        self.bulkClass.bulkOperatonProcessing()
+
+        if newPlaysCount > 0:
+            return { "result" : True, "rc" : 0, "msg" : f"Added {newPlaysCount} new playbook entries"}
+        return { "result" : False, "rc" : 302, "msg" : "No new plays added".format(playbookName,occurrence)}
+
 class _playbookUpdateData(action._action):
     occurrence = str()
     playbookName = str()
@@ -224,12 +260,17 @@ class _playbookSearchAction(action._action):
     incomplete = bool()
     excludeIncrementSequence = bool()
     playbookLimit = 5
-    excludeMaxAttempts = True
+    maxAttempts = int()
+    delayBetweenAttempts = 0
 
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
+        
+        delayBetweenAttempts = 300
+        if self.delayBetweenAttempts != 0 :
+            delayBetweenAttempts = self.delayBetweenAttempts
 
-        playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit)["results"]
+        playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.incomplete, "startTime" : {"$lt" : time.time() - delayBetweenAttempts}, "attempt" : {"$lte" : self.maxAttempts} },limit=self.playbookLimit)["results"]
         incrementOccurrences = []
         if self.excludeIncrementSequence:
             playbooks2 = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]

@@ -1,7 +1,7 @@
 {
    "name": "playbook",
-   "author": "z1p",
-   "version": 1.4,
+   "author": "z1p, b1scuit-thi3f",
+   "version": 1.45,
    "categories": [
       "automation"
    ],
@@ -556,6 +556,89 @@
             }
          }
       },
+      "playbookBulkAdd": {
+         "display_name": "playbookBulkAdd",
+         "className": "_playbookBulkAdd",
+         "class_location": "models.action",
+         "description": "Adds multiple playbook entries based on a defined occurrence if said occurrence does not already exist within the playbook.",
+         "fields": [
+            {
+               "schema_item": "manual",
+               "schema_value": "manual",
+               "type": "group-checkbox",
+               "label": "manual",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true,
+               "group" : 1
+            },
+            {
+               "schema_item": "occurrences",
+               "schema_value": "occurrences",
+               "type": "json-input",
+               "label": "occurrences",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true,
+               "group" : 1
+            },
+            {
+               "schema_item": "occurrencesField",
+               "schema_value": "occurrencesField",
+               "type": "input",
+               "label": "occurrences field",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookName",
+               "schema_value": "playbookName",
+               "type": "input",
+               "label": "playbookName",
+               "description": "",
+               "required" : true,
+               "jimi_syntax": true
+            },
+            {
+               "schema_item": "playbookData",
+               "schema_value": "playbookData",
+               "type": "json-input",
+               "label": "playbookData",
+               "description": "",
+               "required" : false,
+               "jimi_syntax": true
+            }
+         ],
+         "data_out": {
+            "result": {
+               "description": "Returns True when successful.",
+               "type": "boolean",
+               "always_present": true,
+               "values": {
+                  "True": {
+                     "description": "Successful."
+                  },
+                  "False": {
+                     "description": "Existing playbook entry found."
+                  }
+               }
+            },
+            "rc": {
+               "description": "Returns the exit code for the action.",
+               "type": "number",
+               "always_present": true,
+               "values": {
+                  "0": {
+                     "description": "Successful."
+                  },
+                  "1" : {
+                     "description": "Existing playbook entry found."
+                  }
+               }
+            }
+         }
+      },
       "playbookUpdateData": {
          "display_name": "playbookUpdateData",
          "className": "_playbookUpdateData",
@@ -667,6 +750,24 @@
                "type": "input",
                "label": "playbookLimit",
                "description": "Limit the number of occurrences to be returned",
+               "required": false,
+               "jimi_syntax": false
+            },
+            {
+               "schema_item": "maxAttempts",
+               "schema_value": "maxAttempts",
+               "type": "input",
+               "label": "maxAttempts",
+               "description": "Limit the number of times a play is allowed to run",
+               "required": false,
+               "jimi_syntax": false
+            },
+            {
+               "schema_item": "delayBetweenAttempts",
+               "schema_value": "delayBetweenAttempts",
+               "type": "input",
+               "label": "delayBetweenAttempts",
+               "description": "How long to wait before picking up the play again",
                "required": false,
                "jimi_syntax": false
             }
