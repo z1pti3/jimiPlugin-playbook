@@ -58,7 +58,7 @@ class _playbookStart(action._action):
                         plays[p].delete()
                     plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
                 play = plays[0]
-                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
+                data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version, "attempt" : play.attempt }
                 actionResult["result"] = True
                 actionResult["rc"] = 201
                 return actionResult
@@ -68,7 +68,7 @@ class _playbookStart(action._action):
                     plays[p].delete()
                 plays = cache.globalCache.get("playbookCache",match,getPlaybookObject,playbookName,occurrence,self.sequence,customCacheTime=delayBetweenAttempts,forceUpdate=True)
             play = plays[0]
-            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version }
+            data["plugin"]["playbook"] = { "match" : match, "name": playbookName, "occurrence": occurrence, "playbookData" : play.playbookData, "sequence": self.sequence, "version" : self.version, "attempt" : play.attempt }
 
             if play.startTime + delayBetweenAttempts > time.time():
                 actionResult["result"] = False
