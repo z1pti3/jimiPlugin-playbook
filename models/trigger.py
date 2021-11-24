@@ -37,16 +37,20 @@ class _playbookSearch(jimi.trigger._trigger):
                 },
                 {
                     "$match" : {
-                        "$or" : [
+                        "$and" : [
                             {
-                                "doc.sequence" : self.sequence,
-                                "doc.result" : True
-                            },
-                            {
-                                "doc.sequence" :  self.sequence + 1,
-                                "doc.result" : False
+                                "$or" : [
+                                    {
+                                        "doc.sequence" : self.sequence,
+                                        "doc.result" : True
+                                    },
+                                    {
+                                        "doc.sequence" :  self.sequence + 1,
+                                        "doc.result" : False
+                                    }
+                                ] 
                             }
-                        ] 
+                        ]
                     }
                 },
                 {
@@ -58,9 +62,9 @@ class _playbookSearch(jimi.trigger._trigger):
             for field in playbook.playbokFields:
                 aggregateStatement[5]["$project"][field] = "$doc.{0}".format(field)
             if self.maxAttempts:
-                aggregateStatement[4]["$match"]["doc.maxAttempts"] = { "$lt" : self.maxAttempts }
+                aggregateStatement[4]["$match"]["$and"]["doc.maxAttempts"] = { "$lt" : self.maxAttempts }
             if self.delayBetweenAttempts:
-                aggregateStatement[4]["$match"]["doc.startTime"] = { "$lt" : time.time() - self.delayBetweenAttempts }
+                aggregateStatement[4]["$match"]["$and"]["doc.startTime"] = { "$lt" : time.time() - self.delayBetweenAttempts }
             playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
         else:
             playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
