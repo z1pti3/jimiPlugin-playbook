@@ -1,7 +1,7 @@
 {
    "name": "playbook",
    "author": "z1p, b1scuit-thi3f",
-   "version": 1.45,
+   "version": 1.46,
    "categories": [
       "automation"
    ],
@@ -134,6 +134,24 @@
                "label": "excludeIncrementSequence",
                "description": "When True any playbook occurrences that have a higher completed sequence will be excluded from the results.",
                "required": true,
+               "jimi_syntax": false
+            },
+            {
+               "schema_item": "maxAttempts",
+               "schema_value": "maxAttempts",
+               "type": "input",
+               "label": "maxAttempts",
+               "description": "Exclude playbooks with greater than max attempts.",
+               "required": false,
+               "jimi_syntax": false
+            },
+            {
+               "schema_item": "delayBetweenAttempts",
+               "schema_value": "delayBetweenAttempts",
+               "type": "input",
+               "label": "delayBetweenAttempts",
+               "description": "Exclude playbooks if the delay between attempts has not been met.",
+               "required": false,
                "jimi_syntax": false
             }
          ],
