@@ -4,6 +4,9 @@ from core import db, audit
 # Initialize
 dbCollectionName = "playbook"
 
+# used for plugin objects to only include these fields on output
+playbokFields = ["name","occurrence","playbookData","version","resultData","result","startTime","endTime","attempt","sequence","maxAttempts"]
+
 class _playbook(db._document):
     name = str()
     occurrence = str()

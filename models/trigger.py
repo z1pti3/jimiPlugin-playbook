@@ -1,10 +1,8 @@
 from plugins.playbook.models import playbook
 
-from core.models import trigger
+import jimi 
 
-from core import helpers    
-
-class _playbookSearch(trigger._trigger):
+class _playbookSearch(jimi.trigger._trigger):
     playbookName = str()
     sequence = int()
     inComplete = bool()
@@ -13,17 +11,50 @@ class _playbookSearch(trigger._trigger):
     excludeMaxAttempts = True
 
     def check(self):
-        playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit)["results"]
-        incrementOccurrences = []
         if self.excludeIncrementSequence:
-            playbooks2 = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
-            incrementOccurrences = [ x["occurrence"] for x in playbooks2 ]
-        results = []
-        for playbookItem in playbooks:
-            result = {}
-            if playbookItem["occurrence"] not in incrementOccurrences:
-                for key ,value in playbookItem.items():
-                    if key not in helpers.systemProperties:
-                        result[key] = value
-                results.append(result)
-        self.result["events"] = results
+            aggregateStatement = [
+                {
+                    "$match" : {
+                        "name" : self.playbookName,
+                        "sequence" : { "$gte" : self.sequence },
+                        "sequence" : { "$lte" : self.sequence + 1 },
+                    }
+                },
+                {
+                    "$sort" : { "sequence" : 1 }
+                },
+                {
+                    "$group" : {
+                        "_id" : "$occurrence",
+                        "doc" : { "$last" : "$$ROOT" }
+                    }
+                },
+                {
+                    "$unwind" : "$doc"
+                },
+                {
+                    "$match" : {
+                        "$or" : [
+                            {
+                                "doc.sequence" : self.sequence,
+                                "doc.result" : True
+                            },
+                            {
+                                "doc.sequence" :  self.sequence + 1,
+                                "doc.result" : False
+                            }
+                        ] 
+                    }
+                },
+                {
+                    "$project" : {
+                        
+                    }
+                },
+            ]
+            for field in playbook.playbokFields:
+                aggregateStatement[5]["$project"][field] = "$doc.{0}".format(field)
+            playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
+        else:
+            playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
+        self.result["events"] = playbooks
