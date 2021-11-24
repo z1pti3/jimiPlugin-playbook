@@ -63,8 +63,12 @@ class _playbookSearch(jimi.trigger._trigger):
                 aggregateStatement[5]["$project"][field] = "$doc.{0}".format(field)
             if self.maxAttempts:
                 aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : self.maxAttempts } })
-            if self.delayBetweenAttempts:
+            else:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : 1 } })
+            if self.delayBetweenAttempts != 0:
                 aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - self.delayBetweenAttempts } })
+            else:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - 300 } })
             playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
         else:
             playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
