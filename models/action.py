@@ -261,32 +261,72 @@ class _playbookSearchAction(action._action):
     excludeIncrementSequence = bool()
     playbookLimit = 5
     maxAttempts = int()
-    delayBetweenAttempts = 0
+    delayBetweenAttempts = int()
 
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
-        
-        delayBetweenAttempts = 300
-        if self.delayBetweenAttempts != 0 :
-            delayBetweenAttempts = self.delayBetweenAttempts
-
-        playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.incomplete, "startTime" : {"$lt" : time.time() - delayBetweenAttempts}, "attempt" : {"$lte" : self.maxAttempts} },limit=self.playbookLimit)["results"]
-        incrementOccurrences = []
         if self.excludeIncrementSequence:
-            playbooks2 = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence + 1, "result" : True }, limit=self.playbookLimit)["results"]
-            incrementOccurrences = [ x["occurrence"] for x in playbooks2 ]
-        results = []
-        for playbookItem in playbooks:
-            result = {}
-            if playbookItem["occurrence"] not in incrementOccurrences:
-                for key ,value in playbookItem.items():
-                    if key not in helpers.systemProperties:
-                        result[key] = value
-                results.append(result)
-        if len(results) > 0:
+            aggregateStatement = [
+                {
+                    "$match" : {
+                        "name" : playbookName,
+                        "sequence" : { "$gte" : self.sequence },
+                        "sequence" : { "$lte" : self.sequence + 1 },
+                    }
+                },
+                {
+                    "$sort" : { "sequence" : 1 }
+                },
+                {
+                    "$group" : {
+                        "_id" : "$occurrence",
+                        "doc" : { "$last" : "$$ROOT" }
+                    }
+                },
+                {
+                    "$unwind" : "$doc"
+                },
+                {
+                    "$match" : {
+                        "$and" : [
+                            {
+                                "$or" : [
+                                    {
+                                        "doc.sequence" : self.sequence,
+                                        "doc.result" : True
+                                    },
+                                    {
+                                        "doc.sequence" :  self.sequence + 1,
+                                        "doc.result" : False
+                                    }
+                                ] 
+                            }
+                        ]
+                    }
+                },
+                {
+                    "$project" : {
+                        
+                    }
+                },
+            ]
+            for field in playbook.playbokFields:
+                aggregateStatement[5]["$project"][field] = "$doc.{0}".format(field)
+            if self.maxAttempts:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : self.maxAttempts } })
+            else:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : 1 } })
+            if self.delayBetweenAttempts != 0:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - self.delayBetweenAttempts } })
+            else:
+                aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - 300 } })
+            playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
+        else:
+            playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
+        if len(playbooks) > 0:
             actionResult["result"] = True
             actionResult["msg"] = "Occurrences found"
-            actionResult["playbook"] = results
+            actionResult["playbook"] = playbooks
             actionResult["rc"] = 0
             return actionResult
         actionResult["result"] = False
