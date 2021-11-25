@@ -1,7 +1,9 @@
+from plugins.playbook.models import playbook as pb
+
 from core import plugin, model
 
 class _playbook(plugin._plugin):
-    version = 1.46
+    version = 1.47
 
     def install(self):
         # Register models
@@ -15,6 +17,9 @@ class _playbook(plugin._plugin):
         model.registerModel("playbookUpdateData","_playbookUpdateData","_action","plugins.playbook.models.action")
         model.registerModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
         model.registerModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
+        print("Creating indexes...")
+        pb._playbook()._dbCollection.create_index("name")
+        pb._playbook()._dbCollection.create_index([("name", 1),("occurrence", 1)])
         return True
 
     def uninstall(self):
@@ -45,4 +50,8 @@ class _playbook(plugin._plugin):
             model.registerModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
         if self.version < 1.45:
             model.registerModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
+        if self.version < 1.47:
+            print("Creating indexes...")
+            pb._playbook()._dbCollection.create_index("name")
+            pb._playbook()._dbCollection.create_index([("name", 1),("occurrence", 1)])
         return True
