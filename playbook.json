@@ -150,7 +150,7 @@
                "schema_value": "delayBetweenAttempts",
                "type": "input",
                "label": "delayBetweenAttempts",
-               "description": "Exclude playbooks if the delay between attempts has not been met.",
+               "description": "Exclude playbooks if the delay between attempts has not been met. If left undefined then a default value of 300 is applied.",
                "required": false,
                "jimi_syntax": false
             }
