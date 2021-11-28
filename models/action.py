@@ -269,7 +269,7 @@ class _playbookSearchAction(action._action):
             aggregateStatement = [
                 {
                     "$match" : {
-                        "name" : playbookName,
+                        "name" : self.playbookName,
                         "sequence" : { "$gte" : self.sequence },
                         "sequence" : { "$lte" : self.sequence + 1 },
                     }
@@ -280,11 +280,12 @@ class _playbookSearchAction(action._action):
                 {
                     "$group" : {
                         "_id" : "$occurrence",
-                        "doc" : { "$last" : "$$ROOT" }
+                        "last_sequence" : { "$last" : "$$ROOT" },
+                        "first_sequence" : { "$first" : "$$ROOT" }
                     }
                 },
                 {
-                    "$unwind" : "$doc"
+                    "$unwind" : "$last_sequence"
                 },
                 {
                     "$match" : {
@@ -292,17 +293,20 @@ class _playbookSearchAction(action._action):
                             {
                                 "$or" : [
                                     {
-                                        "doc.sequence" : self.sequence,
-                                        "doc.result" : True
+                                        "last_sequence.sequence" : self.sequence,
+                                        "last_sequence.result" : True
                                     },
                                     {
-                                        "doc.sequence" :  self.sequence + 1,
-                                        "doc.result" : False
+                                        "last_sequence.sequence" :  self.sequence + 1,
+                                        "last_sequence.result" : False
                                     }
                                 ] 
                             }
                         ]
                     }
+                },
+                {
+                    "$unwind" : "$first_sequence"
                 },
                 {
                     "$project" : {
@@ -311,15 +315,15 @@ class _playbookSearchAction(action._action):
                 },
             ]
             for field in playbook.playbokFields:
-                aggregateStatement[5]["$project"][field] = "$doc.{0}".format(field)
+                aggregateStatement[6]["$project"][field] = "$first_sequence.{0}".format(field)
             if self.maxAttempts:
-                aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : self.maxAttempts } })
+                aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.attempt"] = { "$lt" : self.maxAttempts }
             else:
-                aggregateStatement[4]["$match"]["$and"].append({"doc.attempt" : { "$lt" : 1 } })
+                aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.attempt"] = { "$lt" : 1 }
             if self.delayBetweenAttempts != 0:
-                aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - self.delayBetweenAttempts } })
+                aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.startTime"] = { "$lt" : time.time() - self.delayBetweenAttempts }
             else:
-                aggregateStatement[4]["$match"]["$and"].append({"doc.startTime" : { "$lt" : time.time() - 300 } })
+                aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.startTime"] = { "$lt" : time.time() - 300 }
             playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
         else:
             playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
