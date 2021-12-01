@@ -326,7 +326,7 @@ class _playbookSearchAction(action._action):
                 aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.startTime"] = { "$lt" : time.time() - 300 }
             playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
         else:
-            playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
+            playbooks = playbook._playbook().query(query={"name" : playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
         if len(playbooks) > 0:
             actionResult["result"] = True
             actionResult["msg"] = "Occurrences found"
