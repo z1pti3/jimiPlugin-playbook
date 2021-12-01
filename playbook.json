@@ -1,7 +1,7 @@
 {
    "name": "playbook",
    "author": "z1p, b1scuit-thi3f",
-   "version": 1.47,
+   "version": 1.48,
    "categories": [
       "automation"
    ],
@@ -119,10 +119,10 @@
                "jimi_syntax": false
             },
             {
-               "schema_item": "inComplete",
-               "schema_value": "inComplete",
+               "schema_item": "incomplete",
+               "schema_value": "incomplete",
                "type": "checkbox",
-               "label": "inComplete",
+               "label": "incomplete",
                "description": "When True incomplete playbooks will also be returned for the given playbookName and sequence number.",
                "required": true,
                "jimi_syntax": false
