@@ -7,7 +7,7 @@ import jimi
 class _playbookSearch(jimi.trigger._trigger):
     playbookName = str()
     sequence = int()
-    inComplete = False
+    incomplete = False
     excludeIncrementSequence = True
     playbookLimit = 5
     maxAttempts = int()
@@ -75,5 +75,5 @@ class _playbookSearch(jimi.trigger._trigger):
                 aggregateStatement[4]["$match"]["$and"][0]["$or"][1]["last_sequence.startTime"] = { "$lt" : time.time() - 300 }
             playbooks = playbook._playbook().aggregate(aggregateStatement=aggregateStatement,limit=self.playbookLimit)
         else:
-            playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.inComplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
+            playbooks = playbook._playbook().query(query={"name" : self.playbookName, "sequence" : self.sequence, "result" : not self.incomplete },limit=self.playbookLimit,fields=playbook.playbokFields)["results"]
         self.result["events"] = playbooks
