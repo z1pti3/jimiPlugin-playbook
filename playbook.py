@@ -3,7 +3,7 @@ from plugins.playbook.models import playbook as pb
 from core import plugin, model
 
 class _playbook(plugin._plugin):
-    version = 1.47
+    version = 1.48
 
     def install(self):
         # Register models
