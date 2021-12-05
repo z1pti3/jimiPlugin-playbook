@@ -12,10 +12,10 @@
     <br/>
     {{ jimi.table("1","Results","playbookResultsTable/") }}
     <script>
-        $('#orderTable').on('click', '.clearPlay', function(e){
+        $('#table_1').on('click', '.clearPlay', function(e){
             var row = $(this).closest('tr')
             $.ajax({url:$(this).attr('id')+"/clear/", type:"GET", success: function ( result ) {
-                row.remove()
+                    row.remove()
                 }
             })
             $(this).closest('tr').remove()

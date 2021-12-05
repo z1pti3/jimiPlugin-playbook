@@ -26,12 +26,10 @@
                 "order" : [[ 0, "desc" ]],
                 "autoWidth": false,
                 columns : [
-                    { "data": "name", "name": "name", "title": "name", "width": "50px", render: $.fn.dataTable.render.text() },
-                    { "title" : "options", "width": "50px", "data": "options", render: function (data, type, row) {
-                            $button = '<a href="'+data+'/">View</a>';
-                            return $button;
+                        { "data" : "name", "name": "name", "title": "name", "width": "50px", render: function (data, type, row) {
+                            return '<a href="'+encodeURIComponent(data)+'/">'+data+'</a>';
                         } 
-                    },
+                    }
                 ],
                 columnDefs: [{
                     orderable: true
@@ -46,7 +44,7 @@
                 if (tableData[content].hasOwnProperty("systemID")) {
                     systemID = tableData[content]["systemID"]
                 }
-                table.row.add({ "name" : tableData[content], "options" : tableData[content] })
+                table.row.add({ "name" : tableData[content]})
             }
             table.draw();
         });
