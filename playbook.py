@@ -17,7 +17,6 @@ class _playbook(plugin._plugin):
         model.registerModel("playbookUpdateData","_playbookUpdateData","_action","plugins.playbook.models.action")
         model.registerModel("playbookStartUpdate","_playbookStartUpdate","_action","plugins.playbook.models.action")
         model.registerModel("playbookBulkAdd","_playbookBulkAdd","_action","plugins.playbook.models.action")
-        print("Creating indexes...")
         pb._playbook()._dbCollection.create_index("name")
         pb._playbook()._dbCollection.create_index([("name", 1),("occurrence", 1)])
         return True
