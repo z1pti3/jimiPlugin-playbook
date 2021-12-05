@@ -17,8 +17,9 @@ class _playbookStart(action._action):
     delayBetweenAttempts = int()
     sequence = int()
 
-    def __init__(self):
+    def __init__(self,restrictClass=True):
         cache.globalCache.newCache("playbookCache")
+        return super(_playbookStart, self).__init__(restrictClass)
 
     def run(self,data,persistentData,actionResult):
         playbookName = helpers.evalString(self.playbookName,{"data" : data})
@@ -172,8 +173,9 @@ class _playbookBulkAdd(action._action):
     playbookData = dict()
     manual = bool()
 
-    def __init__(self):
+    def __init__(self,restrictClass=True):
         self.bulkClass = db._bulk()
+        return super(_playbookBulkAdd, self).__init__(restrictClass)
 
     def postRun(self):
         self.bulkClass.bulkOperatonProcessing()
